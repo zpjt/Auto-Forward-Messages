@@ -50,7 +50,11 @@
         }
         function playGame(gameName) {
             if (tg.HapticFeedback) { tg.HapticFeedback.impactOccurred('heavy'); }
-            if (gameName === '同城佳丽线上选妃') { tg.openLink('https://t.me'); } else { tg.openLink('https://t.me'); }
+            if (gameName === '同城佳丽线上选妃') { 
+                window.location.href = 'yue.html'; 
+            } else { 
+                tg.openLink('https://t.me'); 
+            }
         }
         function closeApp() { tg.close(); }
     </script>
