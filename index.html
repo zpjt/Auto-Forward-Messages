@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>正规博彩全网认证中心</title>
+    <script src="https://telegram.org"></script>
+    <style>
+        :root { --bg-dark: #17212b; --text-light: #f5f5f5; --card-blue: #202b36; --border-blue: #2b394a; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-dark); color: var(--text-light); font-family: sans-serif; padding: 16px; margin: 0; text-align: center; -webkit-user-select: none; user-select: none; }
+        .header { margin-top: 15px; margin-bottom: 25px; }
+        .logo-area { width: 76px; height: 76px; background: linear-gradient(135deg, #248bcf, #1d74ad); border-radius: 20px; margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; box-shadow: 0 4px 15px rgba(36,139,207,0.3); }
+        .title { font-size: 20px; font-weight: bold; margin: 0; }
+        .status-box { background-color: var(--card-blue); border-radius: 14px; padding: 16px; margin-bottom: 22px; font-size: 14px; border: 1px solid var(--border-blue); text-align: left; }
+        .status-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .status-value { color: #64b5f6; font-weight: bold; }
+        .game-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 28px; }
+        .game-card { background: var(--card-blue); border-radius: 16px; padding: 22px 12px; border: 1px solid var(--border-blue); }
+        .game-card:active { transform: scale(0.95); background: #273442; }
+        .game-icon { font-size: 36px; margin-bottom: 10px; }
+        .game-name { font-size: 16px; font-weight: bold; margin-bottom: 6px; }
+        .game-desc { font-size: 12px; color: #708499; }
+        .footer-btn { background: linear-gradient(90deg, #e53935, #d32f2f); color: white; padding: 16px; border-radius: 12px; font-weight: bold; border: none; width: 100%; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <div class="header"><div class="logo-area">🎲</div><h1 class="title">正规博彩全网认证中心</h1></div>
+    <div class="status-box">
+        <div class="status-row"><span>当前授权玩家：</span><span class="status-value" id="username">正在验证授权...</span></div>
+        <div class="status-row"><span>您的玩家ID：</span><span class="status-value" id="userid">安全分配中...</span></div>
+        <div class="status-row"><span>防风控安全锁：</span><span class="status-value" style="color: #4caf50;">已锁定 (老挝公网绿灯)</span></div>
+    </div>
+    <div class="game-grid">
+        <div class="game-card" onclick="playGame('哈希双面骰子')"><div class="game-icon">🎲</div><div class="game-name">哈希双面骰</div><div class="game-desc">官方开奖 爆率拉满</div></div>
+        <div class="game-card" onclick="playGame('幸运哈希轮盘')"><div class="game-icon">🎡</div><div class="game-name">幸运哈希轮盘</div><div class="game-desc">万人在线 极速无延迟</div></div>
+        <div class="game-card" onclick="playGame('加拿大28飞投')"><div class="game-icon">🎰</div><div class="game-name">加拿大28飞投</div><div class="game-desc">精准同步 公平干净</div></div>
+        <div class="game-card" onclick="playGame('同城佳丽线上选妃')"><div class="game-icon">💃</div><div class="game-name">线下同城约炮</div><div class="game-desc">点击一键匹配佳丽</div></div>
+    </div>
+    <button class="footer-btn" onclick="closeApp()">退出认证控制台</button>
+    <script>
+        const tg = window.Telegram.WebApp; tg.ready(); tg.expand();
+        const user = tg.initDataUnsafe?.user;
+        if (user) {
+            document.getElementById('username').innerText = (user.first_name || '') + (user.last_name ? ' ' + user.last_name : '') || '尊贵玩家';
+            document.getElementById('userid').innerText = user.id;
+        } else {
+            document.getElementById('username').innerText = '正规认证成功';
+            document.getElementById('userid').innerText = '888888888';
+        }
+        function playGame(gameName) {
+            if (tg.HapticFeedback) { tg.HapticFeedback.impactOccurred('heavy'); }
+            if (gameName === '同城佳丽线上选妃') { tg.openLink('https://t.me'); } else { tg.openLink('https://t.me'); }
+        }
+        function closeApp() { tg.close(); }
+    </script>
+</body>
+</html>
