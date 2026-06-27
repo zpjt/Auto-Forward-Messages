@@ -28,35 +28,37 @@
     </style>
 </head>
 <body>
-    <div class="header"><div class="logo">🎬 极速影音大厅</div></div>
+    <div class="header"><div class="logo">🎬 极速影音直连厅</div></div>
     <div class="player-wrapper">
-        <video id="videoPlayer" controls autoplay playsinline src="https://zencdn.net"></video>
+        <!-- 核心修复：更换为中国大厂加速节点、支持公网跨域放行的标准免签 H5 视频流 -->
+        <video id="videoPlayer" controls autoplay playsinline src="https://qq.com"></video>
     </div>
     <div class="category-bar">
-        <div class="cat-item active">全部</div>
-        <div class="cat-item">热门电影</div>
-        <div class="cat-item">精选综艺</div>
+        <div class="cat-item active">全部影视</div>
+        <div class="cat-item">正在热播</div>
     </div>
     <div class="section-title">🔥 正在实时热播</div>
     <div class="video-grid">
-        <div class="video-card" onclick="playVideo('https://zencdn.net')">
+        <!-- 视频 1 -->
+        <div class="video-card" onclick="playVideo('https://qq.com')">
             <div class="thumb-box"><img src="https://unsplash.com"><span class="duration">00:46</span></div>
-            <div class="video-info"><div class="video-title">演示影视：4K极清蔚蓝深海生态纪录片</div><div class="video-meta"><span>👁️ 84.2万</span><span>👍 98%</span></div></div>
+            <div class="video-info"><div class="video-title">演示影视：大厂专线极速演示高清纪录片</div><div class="video-meta"><span>👁️ 84.2万</span><span>👍 98%</span></div></div>
         </div>
-        <div class="video-card" onclick="playVideo('https://w3.org')">
-            <div class="thumb-box"><img src="https://unsplash.com"><span class="duration">00:52</span></div>
-            <div class="video-info"><div class="video-title">演示动画：开源3D精美奇幻大作预告片</div><div class="video-meta"><span>👁️ 51.7万</span><span>👍 96%</span></div></div>
+        <!-- 视频 2 -->
+        <div class="video-card" onclick="playVideo('https://w3schools.com')">
+            <div class="thumb-box"><img src="https://unsplash.com"><span class="duration">00:10</span></div>
+            <div class="video-info"><div class="video-title">演示动画：通用 H5 网页流媒体兼容性测试片</div><div class="video-meta"><span>👁️ 51.7万</span><span>👍 96%</span></div></div>
         </div>
     </div>
     <script>
         const player = document.getElementById('videoPlayer');
+        const tg = window.Telegram.WebApp;
+        if (tg) { tg.ready(); tg.expand(); }
         function playVideo(url) {
             player.src = url;
             player.currentTime = 0;
             player.play();
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-            }
+            if (tg && tg.HapticFeedback) { tg.HapticFeedback.impactOccurred('medium'); }
         }
     </script>
 </body>
