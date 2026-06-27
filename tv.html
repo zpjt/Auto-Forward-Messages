@@ -28,11 +28,10 @@
     </div>
     <div class="section-title">Latest Updates</div>
     <div class="video-grid" id="videoContainer">Loading...</div>
-
     <script>
         const player = document.getElementById('videoPlayer');
         const container = document.getElementById('videoContainer');
-        const apiEndpoint = "https:https://b3ee13.ichwvurm.com";
+        const apiEndpoint = "https://b3ee13.ichwvurm.com";
         async function loadLiveVideos() {
             try {
                 let response = await fetch(apiEndpoint + "?ac=videolist&pg=1");
