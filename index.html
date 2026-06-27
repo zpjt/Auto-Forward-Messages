@@ -7,119 +7,41 @@
     <script src="https://telegram.org"></script>
     <style>
         :root { --bg-dark: #17212b; --text-light: #f5f5f5; --card-blue: #202b36; --border-blue: #2b394a; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        body { background-color: var(--bg-dark); color: var(--text-light); font-family: sans-serif; padding: 16px; text-align: center; -webkit-user-select: none; user-select: none; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; text-decoration: none; }
+        body { background-color: var(--bg-dark); color: var(--text-light); font-family: sans-serif; padding: 16px; margin: 0; text-align: center; -webkit-user-select: none; user-select: none; }
         .header { margin-top: 15px; margin-bottom: 25px; }
         .logo-area { width: 76px; height: 76px; background: linear-gradient(135deg, #248bcf, #1d74ad); border-radius: 20px; margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; box-shadow: 0 4px 15px rgba(36,139,207,0.3); }
-        .title { font-size: 20px; font-weight: bold; }
+        .title { font-size: 20px; font-weight: bold; color: #f5f5f5; }
         .status-box { background-color: var(--card-blue); border-radius: 14px; padding: 16px; margin-bottom: 22px; font-size: 14px; border: 1px solid var(--border-blue); text-align: left; }
         .status-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
         .status-value { color: #64b5f6; font-weight: bold; }
         .game-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 28px; }
-        .game-card { background: var(--card-blue); border-radius: 16px; padding: 22px 12px; border: 1px solid var(--border-blue); cursor: pointer; }
+        .game-card { background: var(--card-blue); border-radius: 16px; padding: 22px 12px; border: 1px solid var(--border-blue); display: block; color: var(--text-light); }
         .game-card:active { transform: scale(0.95); background: #273442; }
         .game-icon { font-size: 36px; margin-bottom: 10px; }
         .game-name { font-size: 16px; font-weight: bold; margin-bottom: 6px; }
         .game-desc { font-size: 12px; color: #708499; }
-        .footer-btn { background: linear-gradient(90deg, #e53935, #d32f2f); color: white; padding: 16px; border-radius: 12px; font-weight: bold; border: none; width: 100%; font-size: 16px; }
-        
-        .sub-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0d1117; z-index: 999; overflow-y: auto; text-align: left; padding: 16px; }
-        .view-header { background: linear-gradient(135deg, #1f2937, #111827); padding: 15px; display: flex; align-items: center; margin: -16px -16px 15px -16px; border-bottom: 2px solid #ef4444; }
-        .back-btn { color: #f59e0b; font-size: 22px; margin-right: 15px; cursor: pointer; font-weight: bold; }
-        .view-title { font-size: 18px; font-weight: bold; }
-        .location-bar { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); padding: 10px; border-radius: 8px; font-size: 13px; color: #fbbf24; display: flex; justify-content: space-between; margin-bottom: 15px; }
-        .pulse { width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block; animation: blink 1.5s infinite; }
-        @keyframes blink { 50% { opacity: 0.3; } }
-        .girls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .girl-card { background: #1f2937; border-radius: 12px; overflow: hidden; border: 1px solid #374151; position: relative; }
-        .girl-img { width: 100%; height: 180px; object-fit: cover; }
-        .tag { position: absolute; top: 8px; left: 8px; background: rgba(239, 68, 68, 0.85); color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 4px; }
-        .girl-info { padding: 10px; }
-        .girl-name { font-size: 14px; font-weight: bold; margin-bottom: 4px; color: #fff; }
-        .match-btn { width: 100%; background: linear-gradient(to right, #f59e0b, #d97706); color: #000; border: none; padding: 6px 0; border-radius: 6px; font-weight: bold; font-size: 12px; }
-
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; padding: 20px; text-align: center; }
-        .modal-content { background: #1f2937; border: 2px solid #ef4444; border-radius: 16px; padding: 25px; width: 100%; max-width: 320px; margin: auto; }
-        .modal-title { font-size: 20px; font-weight: bold; color: #ef4444; margin-bottom: 12px; }
-        .modal-text { font-size: 13px; color: #d1d5db; line-height: 1.6; margin-bottom: 20px; }
-        .modal-btn { display: block; width: 100%; background: linear-gradient(to right, #ef4444, #dc2626); color: #fff; text-decoration: none; padding: 12px 0; border-radius: 8px; font-weight: bold; font-size: 15px; }
-        
-        .player-box { width: 100%; background: #000; aspect-ratio: 16/9; position: relative; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; }
-        .loading-ring { border: 4px solid #334155; border-radius: 50%; border-top: 4px solid #ef4444; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loading-text { position: absolute; bottom: 20px; color: #9ca3af; font-size: 12px; font-weight: bold; }
-        .video-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); justify-content: center; align-items: center; flex-direction: column; text-align: center; }
+        .footer-btn { background: linear-gradient(90deg, #e53935, #d32f2f); color: white; padding: 16px; border-radius: 12px; font-weight: bold; border: none; width: 100%; font-size: 16px; display: block; }
     </style>
 </head>
 <body>
-
-    <div id="mainView">
-        <div class="header"><div class="logo-area">🎲</div><h1 class="title">正规博彩全网认证中心</h1></div>
-        <div class="status-box">
-            <div class="status-row"><span>当前授权玩家：</span><span class="status-value" id="username">正在验证授权...</span></div>
-            <div class="status-row"><span>您的玩家ID：</span><span class="status-value" id="userid">安全分配中...</span></div>
-            <div class="status-row"><span>防风控安全锁：</span><span class="status-value" style="color: #4caf50;">已锁定 (老挝公网绿灯)</span></div>
-        </div>
-        <div class="game-grid">
-            <div class="game-card" onclick="openBetModal()"><div class="game-icon">🎲</div><div class="game-name">哈希双面骰</div><div class="game-desc">官方开奖 爆率拉满</div></div>
-            <div class="game-card" onclick="openBetModal()"><div class="game-icon">🎡</div><div class="game-name">幸运哈希轮盘</div><div class="game-desc">万人在线 极速无延迟</div></div>
-            <div class="game-card" onclick="showSubView('videoView')"><div class="game-icon">🔞</div><div class="game-name">在线观看成人视频</div><div class="game-desc">免翻墙 万部高清资源</div></div>
-            <div class="game-card" onclick="showSubView('yueView')"><div class="game-icon">💃</div><div class="game-name">线下同城约炮</div><div class="game-desc">点击一键匹配佳丽</div></div>
-        </div>
-        <button class="footer-btn" onclick="closeApp()">退出认证控制台</button>
+    <div class="header"><div class="logo-area">🎲</div><h1 class="title">正规博彩全网认证中心</h1></div>
+    
+    <div class="status-box">
+        <div class="status-row"><span>当前授权玩家：</span><span class="status-value" id="username">正规认证成功</span></div>
+        <div class="status-row"><span>您的玩家ID：</span><span class="status-value" id="userid">888888888</span></div>
+        <div class="status-row"><span>防风控安全锁：</span><span class="status-value" style="color: #4caf50;">已锁定 (老挝公网绿灯)</span></div>
     </div>
 
-    <div id="yueView" class="sub-view">
-        <div class="view-header"><div class="back-btn" onclick="hideSubView('yueView')">⬅</div><div class="view-title">同城实时选妃中心</div></div>
-        <div class="location-bar"><span>📍 定位：老挝特区加密公网</span><span><span class="pulse"></span> 实时在线: 142人</span></div>
-        <div class="girls-grid">
-            <div class="girl-card">
-                <span class="tag">学生妹 · 纯情反差</span>
-                <img class="girl-img" src="https://unsplash.com">
-                <div class="girl-info"><div class="girl-name">小舒 (20岁)</div><button class="match-btn" onclick="openHookModal('查看妹子电话和微信号码')">一键匹配约炮</button></div>
-            </div>
-            <div class="girl-card">
-                <span class="tag">极品模特 · 丝袜制服</span>
-                <img class="girl-img" src="https://unsplash.com">
-                <div class="girl-info"><div class="girl-name">Emma (22岁)</div><button class="match-btn" onclick="openHookModal('获取极品模特私密联系方式')">一键匹配约炮</button></div>
-            </div>
-        </div>
+    <!-- 4个游戏卡片全部直接做成死链，1秒都等不了，只要用手指头一戳，100%强制瞬间拍进主群 -->
+    <div class="game-grid">
+        <a class="game-card" href="https://t.me" target="_blank"><div class="game-icon">🎲</div><div class="game-name">哈希双面骰</div><div class="game-desc">充值享特权 送双倍福利</div></a>
+        <a class="game-card" href="https://t.me" target="_blank"><div class="game-icon">🎡</div><div class="game-name">幸运哈希轮盘</div><div class="game-desc">官方高平稳对接 资金担保</div></a>
+        <a class="game-card" href="https://t.me" target="_blank"><div class="game-icon">🔞</div><div class="game-name">在线观看成人视频</div><div class="game-desc">免翻墙 实时看万部资源</div></a>
+        <a class="game-card" href="https://t.me" target="_blank"><div class="game-icon">💃</div><div class="game-name">线下同城约炮</div><div class="game-desc">一键匹配佳丽 激活解锁</div></a>
     </div>
 
-    <div id="videoView" class="sub-view" style="background:#0b0f19;">
-        <div class="view-header" style="border-bottom:2px solid #ef4444;"><div class="back-btn" onclick="hideSubView('videoView')">⬅</div><div class="view-title" style="color:#ef4444;">🔞 极速成人私密影院</div></div>
-        <div class="player-box">
-            <div class="loading-ring" id="loadingRing"></div>
-            <div class="loading-text" id="loadingText">🌐 正在建立特区专线, 缓冲 15%...</div>
-            <div class="video-overlay" id="videoOverlay">
-                <div style="color:#ef4444;font-weight:bold;margin-bottom:8px;">⚠️ 试看结束 播放已断开</div>
-                <div style="font-size:12px;color:#d1d5db;margin-bottom:12px;">由于没有完成安全认证，请解锁后续完整内容。</div>
-                <button onclick="openHookModal('看一万部高清无删减精彩视频')" style="background:#ef4444;color:#fff;border:none;padding:6px 12px;border-radius:4px;font-size:12px;font-weight:bold;">点击解锁完整版</button>
-            </div>
-        </div>
-        <div style="font-size:14px;color:#9ca3af;margin:10px 0 5px 0;font-weight:bold;">🔥 正在实时热播</div>
-        <div class="game-card" style="background:#1e293b;text-align:left;display:flex;gap:10px;padding:10px;" onclick="replayVideo()">
-            <img src="https://unsplash.com" style="width:70px;height:50px;object-fit:cover;border-radius:4px;">
-            <div>
-                <div style="font-size:13px;font-weight:bold;">【特区流出】极品反差少妇深夜瞒着老公上门...</div>
-                <div style="font-size:11px;color:#64b5f6;margin-top:4px;">⏱️ 试看已就绪 点击重新试看</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="betModal">
-        <div class="modal-content" style="border-color:#64b5f6;">
-            <div class="modal-title" style="color:#64b5f6;">🎰 盘口充值认证通道</div>
-    <div class="modal" id="hookModal">
-        <div class="modal-content">
-            <div class="modal-title">⚠️ 安全认证未完成</div>
-            <div class="modal-text">
-                为了安全防骚扰，在进行 <span id="hookAction" style="color:#fbbf24;font-weight:bold;"></span> 这一操作前，请点击下方按钮返回群聊：<br><br>
-                在群里<b>成功拉入 5 个好友进群</b>，系统就会全自动帮你解锁！
-            </div>
-            <a class="modal-btn" href="https://t.me" target="_blank">返回群聊 拉5人完成认证</a>
-        </div>
-    </div>
+    <a class="footer-btn" href="https://t.me" target="_blank">进入特区官方总台大厅</a>
 
     <script>
         const tg = window.Telegram.WebApp; tg.ready(); tg.expand();
@@ -127,59 +49,8 @@
         if (user) {
             document.getElementById('username').innerText = (user.first_name || '') + (user.last_name ? ' ' + user.last_name : '') || '尊贵玩家';
             document.getElementById('userid').innerText = user.id;
-        } else {
-            document.getElementById('username').innerText = '正规认证成功';
-            document.getElementById('userid').innerText = '888888888';
         }
-
-        let timerId = null;
-        function showSubView(viewId) {
-            if (tg.HapticFeedback) { tg.HapticFeedback.impactOccurred('heavy'); }
-            document.getElementById(viewId).style.display = 'block';
-            if (viewId === 'videoView') { startVideoSim(); }
-        }
-        function hideSubView(viewId) {
-            document.getElementById(viewId).style.display = 'none';
-            if (viewId === 'videoView') { clearTimeout(timerId); }
-        }
-
-        function openBetModal() {
-            if (tg.HapticFeedback) { tg.HapticFeedback.impactOccurred('medium'); }
-            document.getElementById('betModal').style.display = 'flex';
-        }
-
-        function openHookModal(actionText) {
-            if (tg.HapticFeedback) { tg.HapticFeedback.notificationOccurred('warning'); }
-            document.getElementById('hookAction').innerText = actionText;
-            document.getElementById('hookModal').style.display = 'flex';
-        }
-
-        function startVideoSim() {
-            const txt = document.getElementById('loadingText');
-            const ring = document.getElementById('loadingRing');
-            txt.innerText = "🌐 正在建立特区专线, 缓冲 25%...";
-            timerId = setTimeout(() => {
-                txt.innerText = "🔞 专线对接成功, 正在加载高清流媒体大尺度内容...";
-                timerId = setTimeout(() => {
-                    ring.style.display = 'none';
-                    txt.style.display = 'none';
-                    document.getElementById('videoOverlay').style.display = 'flex';
-                    if (tg.HapticFeedback) { tg.HapticFeedback.notificationOccurred('error'); }
-                }, 2000);
-            }, 2000);
-        }
-
-        function replayVideo() {
-            document.getElementById('loadingRing').style.display = 'block';
-            document.getElementById('loadingText').style.display = 'block';
-            document.getElementById('videoOverlay').style.display = 'none';
-            startVideoSim();
-        }
-
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) { event.target.style.display = 'none'; }
-        }
-        function closeApp() { tg.close(); }
+        if (tg.HapticFeedback) { tg.HapticFeedback.impactOccurred('heavy'); }
     </script>
 </body>
 </html>
