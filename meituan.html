@@ -1,48 +1,90 @@
 ```html
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meituan Control</title>
+    <title>GoDine 美团外卖</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body style="padding: 20px; font-family: sans-serif; background-color: #f4f7f6;">
-    <div style="font-size: 20px; font-weight: bold; margin-bottom: 20px; color:#2c3e50;">Dashboard: Meituan Data Control</div>
-    <div id="content" style="font-size: 16px; color: #666;">Connecting to system...</div>
+<body class="bg-[#f4f4f4] pb-24 font-sans">
+    <div id="app" class="max-w-md mx-auto bg-white min-h-screen shadow-lg">
+        <header class="p-4 bg-[#ffc300] font-black text-lg sticky top-0 shadow">GoDine 外卖</header>
+        <div id="main-content" class="p-4 space-y-4">
+            <!-- 动态加载页面内容 -->
+        </div>
+    </div>
+
+    <!-- 支付遮罩层 -->
+    <div id="payment-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-end sm:items-center justify-center z-50">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6">
+            <h2 class="text-xl font-bold text-center mb-4">扫码支付 ¥<span id="pay-amount">0</span></h2>
+            <div class="flex justify-between gap-4 mb-6">
+                <div class="w-1/2 text-center">
+                    <img src="https://i.ibb.co/fGDhkjkG/alipay.png" class="w-32 h-32 mx-auto border rounded-lg" alt="支付宝">
+                    <p class="text-xs mt-2 text-gray-600">支付宝扫码</p>
+                </div>
+                <div class="w-1/2 text-center">
+                    <img src="https://i.ibb.co/scDgdg2/wechat.png" class="w-32 h-32 mx-auto border rounded-lg" alt="微信">
+                    <p class="text-xs mt-2 text-gray-600">微信扫码</p>
+                </div>
+            </div>
+            <button onclick="location.reload()" class="w-full bg-[#ffc300] py-4 rounded-2xl font-black text-lg shadow-lg">我已支付</button>
+        </div>
+    </div>
 
     <script>
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZXNmeHluYmxqdGt3c2JoYnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTI1NjksImV4cCI6MjA5ODI2ODU2OX0.fcpHEdZUqNABHa1fZ0AJtkucwj-MYRPuSzDoQxkkLLk';
         const SUPABASE_URL = 'https://dzesfxynbljtkwsbhbvq.supabase.co';
         
-        // 使用 fetch 最稳定，无需加载任何外部 SDK
-        fetch(SUPABASE_URL + '/rest/v1/menu?select=*', {
-            method: 'GET',
-            headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': 'Bearer ' + SUPABASE_KEY,
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (Array.isArray(data)) {
-                if (data.length > 0) {
-                    document.getElementById('content').innerHTML = data.map(item => 
-                        '<div style="background:#fff; padding:15px; border-radius:8px; margin-bottom:12px; box-shadow:0 2px 4px rgba(0,0,0,0.05); display:flex; justify-content:space-between; align-items:center;">' +
-                        '<span style="font-size:18px; font-weight:bold; color:#2c3e50;">' + (item.name || 'Unknown') + '</span>' +
-                        '<span style="font-size:18px; font-weight:bold; color:#e74c3c;">¥' + (item.price || 0) + '</span>' +
-                        '</div>'
-                    ).join('');
-                } else {
-                    document.getElementById('content').innerText = 'Data empty. Please insert rows in Supabase.';
-                }
+        const params = new URLSearchParams(window.location.search);
+        const orderId = params.get('orderId');
+
+        async function init() {
+            if (orderId) {
+                // 代付模式
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }});
+                const data = await res.json();
+                const order = data[0];
+                document.getElementById('main-content').innerHTML = `
+                    <div class="bg-white p-6 rounded-3xl shadow-sm text-center">
+                        <h2 class="text-xl font-black text-gray-800">好友邀请代付</h2>
+                        <div class="text-5xl font-black text-[#ff4e00] my-8">¥${order.total}</div>
+                        <button onclick="showPayment(${order.total})" class="w-full bg-[#ffc300] py-4 rounded-2xl font-black text-lg shadow-lg">确认帮TA买单</button>
+                    </div>`;
             } else {
-                document.getElementById('content').innerText = 'Error: ' + JSON.stringify(data);
+                // 点餐模式
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/menu?select=*`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }});
+                const data = await res.json();
+                document.getElementById('main-content').innerHTML = data.map(item => `
+                    <div class="flex items-center p-3 bg-white rounded-2xl shadow-sm">
+                        <div class="w-16 h-16 bg-gray-100 rounded-lg mr-4"></div>
+                        <div class="flex-1">
+                            <div class="font-bold text-gray-800">${item.name}</div>
+                            <div class="text-[#ff4e00] font-black text-lg">¥${item.price}</div>
+                        </div>
+                        <button onclick="createOrder('${item.name}', ${item.price})" class="bg-[#ffc300] w-10 h-10 rounded-full font-black text-xl">+</button>
+                    </div>`).join('');
             }
-        })
-        .catch(err => {
-            document.getElementById('content').innerText = 'Status: ' + err.message;
-        });
+        }
+
+        async function createOrder(name, price) {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+                method: 'POST',
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+                body: JSON.stringify({ items: [{name, price}], total: price, status: 'pending' })
+            });
+            const data = await res.json();
+            const shareUrl = window.location.origin + window.location.pathname + "?orderId=" + data[0].id;
+            prompt("点餐成功！复制此链接发给好友代付：", shareUrl);
+        }
+
+        function showPayment(total) {
+            document.getElementById('pay-amount').innerText = total || 0;
+            document.getElementById('payment-modal').classList.remove('hidden');
+        }
+
+        init();
     </script>
 </body>
 </html>
