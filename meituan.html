@@ -1,18 +1,25 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>GoDine 测试</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>测试</title>
 </head>
 <body>
-    <div id="debug">正在尝试连接...</div>
+    <h1 id="msg">代码已运行</h1>
     <script>
-        const supabase = supabase.createClient('https://dzesfxynbljtkwsbhbvq.supabase.co', 'Sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ');
-        supabase.from('menu').select('*').then(({data, error}) => {
-            if(error) document.getElementById('debug').innerText = '错误: ' + error.message;
-            else document.getElementById('debug').innerText = '成功获取数据: ' + JSON.stringify(data);
-        });
+        console.log("脚本已执行");
+        document.getElementById('msg').innerText = "脚本已成功执行，准备加载Supabase...";
+        
+        // 尝试手动加载库
+        const script = document.createElement('script');
+        script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+        script.onload = () => {
+            document.getElementById('msg').innerText = "Supabase库加载成功！";
+        };
+        script.onerror = () => {
+            document.getElementById('msg').innerText = "错误：库加载失败！";
+        };
+        document.head.appendChild(script);
     </script>
 </body>
 </html>
