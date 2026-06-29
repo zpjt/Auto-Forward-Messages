@@ -3,50 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoDine 餐厅</title>
+    <title>GoDine 菜单</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-100">
-    <header class="bg-white p-4 shadow-sm text-center font-bold text-xl">GoDine 餐厅</header>
-    <div id="menu-list" class="p-4 space-y-4">
-        <p class="text-center text-gray-500">正在加载菜单...</p>
+<body class="bg-gray-100 p-4">
+    <h1 class="text-2xl font-bold mb-4 text-center">GoDine 菜单</h1>
+    <div id="menu-list" class="space-y-4">
+        <p class="text-center text-gray-500">加载中...</p>
     </div>
 
     <script>
-        // 你最新的配置
         const SUPABASE_URL = 'https://dzesfxynbljtkwsbhbvq.supabase.co';
         const SUPABASE_KEY = 'Sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ';
-        
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function fetchMenu() {
             const container = document.getElementById('menu-list');
+            const { data, error } = await supabase.from('menu').select('*');
             
-            try {
-                // 从 menu 表中读取数据
-                const { data, error } = await supabase.from('menu').select('*');
-                
-                if (error) throw error;
+            if (error) {
+                container.innerHTML = `<p style="color:red">读取错误: ${error.message}</p>`;
+                return;
+            }
 
-                if (data && data.length > 0) {
-                    container.innerHTML = data.map(item => `
-                        <div class="bg-white p-4 rounded-lg shadow flex justify-between items-center">
-                            <div>
-                                <h3 class="font-bold text-lg">${item.product || '未知菜品'}</h3>
-                                <p class="text-orange-500 font-bold">¥${item.price || '0'}</p>
-                            </div>
-                            <button class="bg-green-500 text-white px-4 py-2 rounded-full">+</button>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = `<p class="text-center">菜单暂无数据。</p>`;
-                }
-            } catch (err) {
-                container.innerHTML = `<p class="text-center text-red-500" style="word-break:break-all;">加载失败: ${err.message}</p>`;
+            if (data && data.length > 0) {
+                container.innerHTML = data.map(item => `
+                    <div class="bg-white p-4 rounded-lg shadow flex justify-between items-center">
+                        <h3 class="font-bold text-lg">${item.name}</h3>
+                        <p class="text-orange-500 font-bold">¥${item.price}</p>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = `<p class="text-center">没有找到菜单数据。</p>`;
             }
         }
-        
         fetchMenu();
     </script>
 </body>
