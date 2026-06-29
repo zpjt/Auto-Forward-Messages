@@ -2,43 +2,17 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoDine 菜单</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>GoDine 测试</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-100 p-4">
-    <h1 class="text-2xl font-bold mb-4 text-center">GoDine 菜单</h1>
-    <div id="menu-list" class="space-y-4">
-        <p class="text-center text-gray-500">加载中...</p>
-    </div>
-
+<body>
+    <div id="debug">正在尝试连接...</div>
     <script>
-        const SUPABASE_URL = 'https://dzesfxynbljtkwsbhbvq.supabase.co';
-        const SUPABASE_KEY = 'Sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        async function fetchMenu() {
-            const container = document.getElementById('menu-list');
-            const { data, error } = await supabase.from('menu').select('*');
-            
-            if (error) {
-                container.innerHTML = `<p style="color:red">读取错误: ${error.message}</p>`;
-                return;
-            }
-
-            if (data && data.length > 0) {
-                container.innerHTML = data.map(item => `
-                    <div class="bg-white p-4 rounded-lg shadow flex justify-between items-center">
-                        <h3 class="font-bold text-lg">${item.name}</h3>
-                        <p class="text-orange-500 font-bold">¥${item.price}</p>
-                    </div>
-                `).join('');
-            } else {
-                container.innerHTML = `<p class="text-center">没有找到菜单数据。</p>`;
-            }
-        }
-        fetchMenu();
+        const supabase = supabase.createClient('https://dzesfxynbljtkwsbhbvq.supabase.co', 'Sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ');
+        supabase.from('menu').select('*').then(({data, error}) => {
+            if(error) document.getElementById('debug').innerText = '错误: ' + error.message;
+            else document.getElementById('debug').innerText = '成功获取数据: ' + JSON.stringify(data);
+        });
     </script>
 </body>
 </html>
