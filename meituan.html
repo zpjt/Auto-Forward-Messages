@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoDine 菜单</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-white p-4 sticky top-0 z-10 shadow-sm">
+        <h1 class="text-lg font-bold text-gray-800">GoDine 餐厅</h1>
+    </header>
+
+    <div id="menu-list" class="p-3 space-y-3">
+        <p class="text-center text-gray-500">正在加载美味菜单...</p>
+    </div>
+
+    <script>
+        // 使用你的 URL 和那个以 sb_publishable 开头的 Key
+        const SUPABASE_URL = 'https://dzesfxynbljtkwsbhbvq.supabase.co';
+        const SUPABASE_KEY = 'Sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ';
+        
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function fetchMenu() {
+            const { data, error } = await supabase.from('产品').select('*');
+            
+            const container = document.getElementById('menu-list');
+            if (error) {
+                container.innerHTML = `<p class="text-red-500 text-center">加载失败: ${error.message}</p>`;
+                return;
+            }
+
+            if (data && data.length > 0) {
+                container.innerHTML = data.map(item => `
+                    <div class="bg-white p-3 rounded-xl flex items-center shadow-sm">
+                        <div class="w-20 h-20 bg-gray-200 rounded-lg mr-3 flex items-center justify-center text-gray-400">图</div>
+                        <div class="flex-1">
+                            <h2 class="font-bold text-gray-800">${item.姓名}</h2>
+                            <p class="text-orange-600 font-black mt-1">¥${item.价格}</p>
+                        </div>
+                        <button class="bg-yellow-400 text-white w-10 h-10 rounded-full font-bold text-2xl">+</button>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = `<p class="text-center text-gray-500">菜单还是空的哦~</p>`;
+            }
+        }
+        fetchMenu();
+    </script>
+</body>
+</html>
