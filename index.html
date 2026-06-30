@@ -6,18 +6,48 @@
 <title>购物车系统</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-body{font-family:Arial;margin:0;background:#f7f7f7}
-.nav{display:flex;gap:8px;padding:12px;background:#fff;border-bottom:1px solid #eee;position:sticky;top:0}
-.nav-item{padding:10px 14px;border-radius:10px;cursor:pointer;background:#f1f1f1}
-.nav-item.active{background:#111;color:#fff}
-.tab-view{display:none;padding:16px}
+:root{
+  --bg:#f5f5f5;
+  --card:#ffffff;
+  --text:#111111;
+  --muted:#8a8a8a;
+  --primary:#ffd000;
+  --primary-dark:#ffbf00;
+  --danger:#ff4d4f;
+  --success:#00b578;
+  --border:#ececec;
+  --shadow:0 8px 24px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.nav{display:flex;gap:10px;padding:14px 12px;background:linear-gradient(135deg,#111,#2b2b2b);position:sticky;top:0;z-index:10;overflow:auto}
+.nav-item{padding:10px 14px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,.08);color:#fff;font-weight:700;white-space:nowrap}
+.nav-item.active{background:var(--primary);color:#111}
+.tab-view{display:none;padding:14px;max-width:1100px;margin:0 auto}
 .tab-view.active{display:block}
-.card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px;margin-bottom:10px}
+h2{margin:8px 0 14px;font-size:22px;font-weight:800}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-input,select{padding:10px;border:1px solid #ddd;border-radius:10px}
-.btn{padding:8px 12px;border:0;border-radius:10px;cursor:pointer}
-.p{background:#111;color:#fff}.w{background:#ffcc00}.d{background:#ff4d4f;color:#fff}.g{background:#22c55e;color:#fff}
-.muted{color:#777}
+input,select{padding:12px 14px;border:1px solid #ddd;border-radius:14px;background:#fff;outline:none}
+input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,0,.18)}
+.btn{padding:10px 14px;border:0;border-radius:14px;cursor:pointer;font-weight:700}
+.btn:hover{opacity:.95}
+.p{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#111}
+.w{background:#fff3bf;color:#8a5b00;border:1px solid #ffe08a}
+.d{background:linear-gradient(135deg,#ff7875,#ff4d4f);color:#fff}
+.g{background:linear-gradient(135deg,#4cd964,#00b578);color:#fff}
+.muted{color:var(--muted)}
+#order-detail{background:linear-gradient(180deg,#fff,#fffdf2);border:1px solid #ffe58f}
+.card b{font-size:16px}
+.card .muted{font-size:13px}
+@media (max-width:640px){
+  .tab-view{padding:12px}
+  h2{font-size:20px}
+  .card{padding:12px;border-radius:16px}
+  .row{gap:8px}
+  input{width:100%}
+  .btn{width:100%}
+}
 </style>
 </head>
 <body>
@@ -28,15 +58,25 @@ input,select{padding:10px;border:1px solid #ddd;border-radius:10px}
   <div class="nav-item" data-tab="view-admin">⚙️ 管理</div>
 </div>
 
-<div id="view-stores" class="tab-view active"><h2>商家列表</h2><div id="store-list" class="muted">加载中...</div></div>
+<div id="view-stores" class="tab-view active">
+  <h2>商家列表</h2>
+  <div id="store-list" class="muted">加载中...</div>
+</div>
 
 <div id="view-cart" class="tab-view">
   <h2>购物车</h2>
-  <div class="card">共 <b id="cart-count">0</b> 件，合计 ¥<b id="cart-total">0.00</b> <button class="btn p" onclick="checkout()">提交订单</button></div>
+  <div class="card">
+    共 <b id="cart-count">0</b> 件，合计 ¥<b id="cart-total">0.00</b>
+    <button class="btn p" onclick="checkout()">提交订单</button>
+  </div>
   <div id="cart-list" class="muted">购物车为空</div>
 </div>
 
-<div id="view-orders" class="tab-view"><h2>订单</h2><div id="order-list" class="muted">暂无订单</div></div>
+<div id="view-orders" class="tab-view">
+  <h2>订单</h2>
+  <div id="order-detail" class="card muted">点击“查看详情”查看订单明细</div>
+  <div id="order-list" class="muted">暂无订单</div>
+</div>
 
 <div id="view-admin" class="tab-view">
   <h2>管理</h2>
@@ -48,17 +88,13 @@ input,select{padding:10px;border:1px solid #ddd;border-radius:10px}
 
 <script>
 const SUPABASE_URL='https://dzesfxynbljtkwsbhbvq.supabase.co';
-const SUPABASE_KEY='YOUR_KEY_HERE';
+const SUPABASE_KEY='sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ';
+const ALIPAY_PAY_URL='https://ibb.co/pr1C8R4P';
 const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
 let cart={};
+let ordersCache=[];
+let ordersPoller=null;
 
-const esc=t=>String(t??'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]));
-
-function switchTab(id){document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelector(`[data-tab="${id}"]`).classList.add('active');if(id==='view-orders')loadOrders();}
-document.querySelectorAll('.nav-item').forEach(x=>x.onclick=()=>switchTab(x.dataset.tab));
-
-async function loadStores(){try{const {data,error}=await client.from('stores').select('*').order('created_at',{ascending:false});if(error)throw error;renderStores(data||[])}catch(e){console.error(e);store-list.innerHTML='❌ 加载失败';}}
-function renderStores(list){const c=document.getElementById('store-list');if(!list.length){c.innerHTML='暂无商家';return}
-c.innerHTML=list.map(s=>`<div class="card row" style="justify-content:space-between"><div><b>${esc(s.name)}</b><div class="muted">ID: ${esc(s.id)}</div></div><div class="row"><button class="btn w" data-add="${s.id}" data-name="${esc(s.name)}">添加</button><button class="btn d" onclick="deleteStore('${s.id}')">删除</button></div></div>`).join('');
-c.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addToCart(b.dataset.add,b.dataset.name));}
-async funct...
+const esc=t=>String(t??'').replace(/[&<>"']/g,m=>({
+  '&':'&amp;','<':'&a
