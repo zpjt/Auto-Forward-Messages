@@ -2,57 +2,57 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>外卖服务系统</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         body { margin: 0; background: #f5f5f5; font-family: "PingFang SC", sans-serif; padding-bottom: 70px; }
         .tab-view { display: none; }
         .active { display: block; }
-        .card { background: white; margin: 12px; padding: 15px; border-radius: 12px; display: flex; box-shadow: 0 2px 8px rgba(0,0,0,0.05); align-items: center; }
-        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #eee; z-index: 1000; }
-        .btn-pay { background: #ff4d4f; color: white; border: none; padding: 6px 15px; border-radius: 20px; font-size: 13px; cursor: pointer; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; align-items: center; justify-content: center; }
+        .card { background: white; margin: 12px; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #ddd; z-index: 999; }
+        
+        /* 统一支付 UI (工行蓝) */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; }
+        .icbc-box { background: white; width: 85%; border-radius: 15px; text-align: center; padding-bottom: 20px; }
+        .icbc-header { background: #004a99; color: white; padding: 15px; border-radius: 15px 15px 0 0; font-weight: bold; }
+        .btn-pay { width: 80%; background: #004a99; color: white; padding: 12px; border-radius: 25px; border: none; margin-top: 15px; }
     </style>
 </head>
 <body>
 
     <div id="view-home" class="tab-view active">
-        <div style="background:#ffcc00; padding:20px; font-weight:bold;">附近商家</div>
+        <div style="padding:20px; font-weight:bold;">热门商家</div>
         <div id="store-list">加载中...</div>
     </div>
 
-    <div id="view-promo" class="tab-view">
-        <div style="padding:20px;">🔥 每日特价优惠</div>
-        <div class="card">神券包 ￥15 (含3张红包)</div>
+    <div id="view-cart" class="tab-view">
+        <div style="padding:20px; font-weight:bold;">购物车</div>
+        <div id="cart-list">您的购物车是空的</div>
     </div>
 
     <div id="view-orders" class="tab-view">
-        <div style="padding:20px; font-weight:bold;">订单追踪</div>
-        <div id="active-orders" style="padding:10px;"></div>
+        <div style="padding:20px; font-weight:bold;">我的订单</div>
+        <div id="order-list">暂无订单</div>
     </div>
 
-    <div id="view-profile" class="tab-view">
-        <div style="padding:40px 20px; background:#ffcc00;">个人中心</div>
+    <div id="modal-pay" class="modal">
+        <div class="icbc-box" onclick="event.stopPropagation()">
+            <div class="icbc-header">中国工商银行支付</div>
+            <img src="https://i.ibb.co/BKf8xrTP/IMG-1422.jpg" style="width:160px; margin:20px 0;">
+            <p>确认支付订单</p>
+            <button class="btn-pay" onclick="executePayment()">确认支付</button>
+        </div>
     </div>
 
     <div class="nav-bar">
         <div onclick="switchTab('view-home')">🏠 首页</div>
-        <div onclick="switchTab('view-promo')">🔥 特价</div>
+        <div onclick="switchTab('view-cart')">🛒 购物车</div>
         <div onclick="switchTab('view-orders')">📋 订单</div>
-        <div onclick="switchTab('view-profile')">👤 我</div>
-    </div>
-
-    <div id="modal-pay" class="modal" onclick="this.style.display='none'">
-        <div class="card" style="flex-direction:column; width:80%;" onclick="event.stopPropagation()">
-            <h3>扫码支付</h3>
-            <img src="https://i.ibb.co/BKf8xrTP/IMG-1422.jpg" style="width:160px; margin:10px;">
-            <button class="btn-pay" onclick="handleOrder()">我已付款，确认下单</button>
-        </div>
     </div>
 
     <script>
         const client = supabase.createClient("https://dzesfxynbljtkwsbhbvq.supabase.co", "sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ");
+        let cart = [];
 
         function switchTab(id) {
             document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
@@ -60,31 +60,45 @@
             if(id === 'view-orders') loadOrders();
         }
 
-        // 加载商家
+        // 首页渲染
         async function loadStores() {
             const { data } = await client.from('stores').select('*');
             document.getElementById('store-list').innerHTML = data?.map(s => `
                 <div class="card">
-                    <div style="flex-grow:1;"><h3>${s.name}</h3></div>
-                    <button class="btn-pay" onclick="document.getElementById('modal-pay').style.display='flex'">点餐</button>
+                    <h3>${s.name}</h3>
+                    <button onclick="addToCart('${s.name}')" style="background:#ffcc00; border:none; padding:8px 15px; border-radius:15px;">加入</button>
                 </div>
-            `).join('') || '<p style="text-align:center;">暂无商家</p>';
+            `).join('') || '暂无商家';
         }
 
-        // 加载订单
+        function addToCart(name) {
+            cart.push(name);
+            alert(name + " 已加入购物车");
+            document.getElementById('cart-list').innerHTML = `
+                <div class="card">
+                    <div>${cart.join(' + ')}</div>
+                    <button class="btn-pay" onclick="document.getElementById('modal-pay').style.display='flex'">去买单</button>
+                </div>
+            `;
+        }
+
+        // 通用支付执行函数
+        async function executePayment() {
+            await client.from('orders').insert([{ items: cart.join(','), status: 'paid' }]);
+            alert("支付成功！");
+            document.getElementById('modal-pay').style.display = 'none';
+            cart = []; // 清空购物车
+            switchTab('view-orders'); // 自动跳转到订单页
+        }
+
         async function loadOrders() {
             const { data } = await client.from('orders').select('*').order('created_at', {ascending:false});
-            document.getElementById('active-orders').innerHTML = data?.map(o => `
+            document.getElementById('order-list').innerHTML = data?.map(o => `
                 <div class="card">
-                    <div>订单时间: ${new Date(o.created_at).toLocaleTimeString()} <br> 状态: ✅ 已支付</div>
+                    <div>${o.items}</div>
+                    <div style="color:green;">${o.status === 'paid' ? '已支付' : '待处理'}</div>
                 </div>
-            `).join('') || '<p style="text-align:center;">暂无订单</p>';
-        }
-
-        async function handleOrder() {
-            await client.from('orders').insert([{ items: "用户下单", status: 'paid' }]);
-            alert("支付确认已发送！");
-            document.getElementById('modal-pay').style.display = 'none';
+            `).join('') || '暂无历史记录';
         }
 
         loadStores();
