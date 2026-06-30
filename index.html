@@ -2,45 +2,58 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>外卖服务系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICBC 聚合支付系统</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        body { margin: 0; background: #f5f5f5; font-family: "PingFang SC", sans-serif; padding-bottom: 70px; }
+        body { margin: 0; background: #f8f9fa; font-family: "PingFang SC", sans-serif; padding-bottom: 70px; }
         .tab-view { display: none; }
         .active { display: block; }
-        .card { background: white; margin: 12px; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #ddd; z-index: 999; }
+        .card { background: white; margin: 12px; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #eee; z-index: 999; }
         
-        /* 统一支付 UI (工行蓝) */
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; }
-        .icbc-box { background: white; width: 85%; border-radius: 15px; text-align: center; padding-bottom: 20px; }
-        .icbc-header { background: #004a99; color: white; padding: 15px; border-radius: 15px 15px 0 0; font-weight: bold; }
-        .btn-pay { width: 80%; background: #004a99; color: white; padding: 12px; border-radius: 25px; border: none; margin-top: 15px; }
+        /* 增强版工行支付弹窗 */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
+        .icbc-container { background: #fff; width: 85%; border-radius: 12px; overflow: hidden; text-align: center; }
+        .icbc-top { background: #004a99; color: white; padding: 20px; }
+        .icbc-body { padding: 20px; }
+        .btn-pay { width: 90%; background: #004a99; color: white; padding: 12px; border-radius: 6px; border: none; font-size: 16px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div id="view-home" class="tab-view active">
-        <div style="padding:20px; font-weight:bold;">热门商家</div>
+        <div style="padding:20px; font-size:18px; font-weight:bold;">热门商户</div>
         <div id="store-list">加载中...</div>
     </div>
 
     <div id="view-cart" class="tab-view">
-        <div style="padding:20px; font-weight:bold;">购物车</div>
-        <div id="cart-list">您的购物车是空的</div>
+        <div style="padding:20px; font-size:18px; font-weight:bold;">购物车结算</div>
+        <div id="cart-list" style="padding:10px;">您的购物车是空的</div>
     </div>
 
     <div id="view-orders" class="tab-view">
-        <div style="padding:20px; font-weight:bold;">我的订单</div>
+        <div style="padding:20px; font-size:18px; font-weight:bold;">交易记录</div>
         <div id="order-list">暂无订单</div>
     </div>
 
+    <div id="view-admin" class="tab-view">
+        <div style="padding:20px; font-size:18px; font-weight:bold;">系统管理</div>
+        <div class="card">
+            <input id="store-input" placeholder="请输入商家名称" style="border:none; width:70%;">
+            <button onclick="addStore()" style="background:#004a99; color:white; border:none; padding:5px 10px;">添加</button>
+        </div>
+    </div>
+
     <div id="modal-pay" class="modal">
-        <div class="icbc-box" onclick="event.stopPropagation()">
-            <div class="icbc-header">中国工商银行支付</div>
-            <img src="https://i.ibb.co/BKf8xrTP/IMG-1422.jpg" style="width:160px; margin:20px 0;">
-            <p>确认支付订单</p>
-            <button class="btn-pay" onclick="executePayment()">确认支付</button>
+        <div class="icbc-container">
+            <div class="icbc-top">中国工商银行支付</div>
+            <div class="icbc-body">
+                <p>订单金额: <b style="font-size:24px;">¥19.90</b></p>
+                <img src="https://i.ibb.co/BKf8xrTP/IMG-1422.jpg" style="width:180px; border:1px solid #eee; padding:5px;">
+                <p style="font-size:12px; color:#888;">请使用手机银行或扫码完成支付</p>
+                <button class="btn-pay" onclick="executePayment()">已完成支付</button>
+            </div>
         </div>
     </div>
 
@@ -48,6 +61,7 @@
         <div onclick="switchTab('view-home')">🏠 首页</div>
         <div onclick="switchTab('view-cart')">🛒 购物车</div>
         <div onclick="switchTab('view-orders')">📋 订单</div>
+        <div onclick="switchTab('view-admin')">⚙️ 管理</div>
     </div>
 
     <script>
@@ -60,35 +74,43 @@
             if(id === 'view-orders') loadOrders();
         }
 
-        // 首页渲染
         async function loadStores() {
             const { data } = await client.from('stores').select('*');
             document.getElementById('store-list').innerHTML = data?.map(s => `
                 <div class="card">
-                    <h3>${s.name}</h3>
-                    <button onclick="addToCart('${s.name}')" style="background:#ffcc00; border:none; padding:8px 15px; border-radius:15px;">加入</button>
+                    <div><b>${s.name}</b></div>
+                    <button onclick="addToCart('${s.name}')" style="background:#ffcc00; border:none; padding:5px 15px; border-radius:15px;">添加</button>
                 </div>
             `).join('') || '暂无商家';
         }
 
         function addToCart(name) {
             cart.push(name);
-            alert(name + " 已加入购物车");
+            alert("已加入: " + name);
             document.getElementById('cart-list').innerHTML = `
                 <div class="card">
                     <div>${cart.join(' + ')}</div>
-                    <button class="btn-pay" onclick="document.getElementById('modal-pay').style.display='flex'">去买单</button>
+                    <button class="btn-pay" style="width:auto; padding:5px 15px;" onclick="document.getElementById('modal-pay').style.display='flex'">去支付</button>
                 </div>
             `;
         }
 
-        // 通用支付执行函数
         async function executePayment() {
+            const btn = document.querySelector('.btn-pay');
+            btn.innerText = "处理中...";
             await client.from('orders').insert([{ items: cart.join(','), status: 'paid' }]);
-            alert("支付成功！");
+            alert("支付验证成功！");
             document.getElementById('modal-pay').style.display = 'none';
-            cart = []; // 清空购物车
-            switchTab('view-orders'); // 自动跳转到订单页
+            btn.innerText = "已完成支付";
+            cart = [];
+            switchTab('view-orders');
+        }
+
+        async function addStore() {
+            const name = document.getElementById('store-input').value;
+            await client.from('stores').insert([{ name: name }]);
+            alert("商家已添加");
+            loadStores();
         }
 
         async function loadOrders() {
@@ -96,9 +118,9 @@
             document.getElementById('order-list').innerHTML = data?.map(o => `
                 <div class="card">
                     <div>${o.items}</div>
-                    <div style="color:green;">${o.status === 'paid' ? '已支付' : '待处理'}</div>
+                    <div style="color:green; font-weight:bold;">已入账</div>
                 </div>
-            `).join('') || '暂无历史记录';
+            `).join('') || '暂无记录';
         }
 
         loadStores();
