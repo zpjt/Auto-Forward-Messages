@@ -1,34 +1,33 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu</title>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <style>
-        body { background: #111; color: #fff; font-family: sans-serif; padding: 20px; }
-        .card { background: #222; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; }
-        button { background: #f0c000; border: none; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; }
-    </style>
-</head>
-<body>
-    <div id="menu">Loading...</div>
-    <script>
-        const client = supabase.createClient(
-            "https://dzesfxynbljtkwsbhbvq.supabase.co",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZXNmeHluYmxqdGt3c2JoYnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTI1NjksImV4cCI6MjA5ODI2ODU2OX0.fcpHEdZUqNABHa1fZ0AJtkucwj-MYRPuSzDoQxkkLLk"
-        );
+<script>
+    // 配置 Supabase
+    const SUPABASE_URL = "https://dzesfxynbljtkwsbhbvq.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZXNmeHluYmxqdGt3c2JoYnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTI1NjksImV4cCI6MjA5ODI2ODU2OX0.fcpHEdZUqNABHa1fZ0AJtkucwj-MYRPuSzDoQxkkLLk";
+    
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function refresh() {
-            const { data } = await client.from('products').select('*');
-            document.getElementById('menu').innerHTML = data.map(item => `
-                <div class="card">
-                    <div><strong>${item.name}</strong><br>¥${item.price}</div>
-                    <button onclick="alert('下单逻辑')">下单</button>
-                </div>
-            `).join('');
+    async function fetchProducts() {
+        // 读取数据库所有列
+        const { data, error } = await client.from('products').select('*');
+        const menuDiv = document.getElementById('menu');
+
+        if (error) {
+            menuDiv.innerHTML = "加载失败: " + error.message;
+            return;
         }
-        refresh();
-    </script>
-</body>
-</html>
+
+        // 渲染升级版布局
+        menuDiv.innerHTML = data.map(item => `
+            <div class="item-card">
+                ${item.image_url ? `<img src="${item.image_url}" style="width:80px; height:80px; border-radius:12px; object-fit:cover; margin-right:15px;">` : ''}
+                <div class="info" style="flex:1;">
+                    <strong style="display:block; font-size:18px;">${item.name}</strong>
+                    ${item.description ? `<small style="color:var(--text-dim);">${item.description}</small>` : ''}
+                    <div class="price" style="margin-top:8px;">¥${item.price}</div>
+                </div>
+                <button class="btn-order" onclick="alert('下单逻辑对接中')">下单</button>
+            </div>
+        `).join('');
+    }
+
+    fetchProducts();
+</script>
