@@ -3,96 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu</title>
+    <title>智能外卖系统</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         body { background: #0f141c; color: #fff; font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; margin: 0; }
-        .item-card { background: #1a2332; width: 100%; max-width: 500px; padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; border: 1px solid #334155; box-sizing: border-box; }
-        .info { flex: 1; margin-left: 15px; }
-        .price { color: #ffcc00; font-weight: bold; margin-top: 5px; }
-        .btn-order { background: #ffcc00; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; color: #1a2332; }
+        .card { background: #1a2332; width: 100%; max-width: 500px; padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #334155; box-sizing: border-box; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; }
+        .btn { background: #ffcc00; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; color: #1a2332; }
     </style>
 </head>
 <body>
-    <div style="background: #fff4e5; padding: 15px; border-radius: 10px; margin: 10px; border: 1px solid #ffd591; text-align: center; width: 100%; max-width: 500px; box-sizing: border-box;">
-        <h3 style="color: #d46b08; margin: 0;">🎁 1元豪华大礼包</h3>
-        <button onclick="alert('活动进行中！请咨询店主。')" style="background: #ff7875; color: white; border: none; padding: 10px 25px; border-radius: 20px; font-weight: bold; cursor: pointer;">立即抢购</button>
+
+    <div id="panel-menu" style="width: 100%; max-width: 500px;">
+        <h2 style="text-align:center;">今日菜单</h2>
+        <div id="menu-list">Loading...</div>
     </div>
 
-    <div id="menu" style="width: 100%; max-width: 500px;">Loading...</div>
-
-    <div style="position: fixed; bottom: 80px; right: 20px; z-index: 999;">
-        <button onclick="openCart()" style="background: #ffcc00; color: #1a2332; border: none; padding: 15px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer;">🛒</button>
-    </div>
-
-    <div id="modal-cart" class="modal">
-        <div class="item-card" style="flex-direction: column; width: 90%; max-width: 350px; background: white; color: #333; text-align: center;">
-            <h3 style="margin-top: 0;">确认订单</h3>
-            <div id="cart-details" style="margin: 10px 0; text-align: left; width: 100%; color: #333;"></div>
-            <div style="font-size: 18px; margin: 15px 0; color: #333;">待转账金额: <span id="total-price" style="color: #ff4d4f; font-weight: bold;">¥0</span></div>
-            
-            <div style="margin-bottom: 20px; text-align: left;">
-                <p style="font-size: 13px; color: #666; margin-bottom: 10px;">请打开支付软件，转账上方显示的金额：</p>
-                <div style="background: #f0f0f0; padding: 15px; border-radius: 8px;">
-                    <p style="margin: 0; font-size: 14px; color: #333;">向平台指定收款账户转账</p>
-                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #999;">(系统将自动确认您的支付状态)</p>
-                </div>
-            </div>
-            
-            <button class="btn-order" style="width: 100%; background: #07c160; color: white; padding: 12px;" onclick="startOrderFlow()">我已转账，确认下单</button>
-            <button onclick="document.getElementById('modal-cart').style.display='none'" style="background:none; border:none; color:#999; margin-top:10px;">返回修改</button>
+    <div id="modal-checkout" class="modal">
+        <div class="card" style="background: white; color: #333; width: 90%; max-width: 350px;">
+            <h3>支付确认</h3>
+            <div id="checkout-details"></div>
+            <div style="font-weight:bold; margin: 15px 0;">应付金额: <span id="checkout-price" style="color:red; font-size:24px;">¥0</span></div>
+            <div id="merchant-info" style="font-size:12px; color:#888; margin-bottom:15px;">平台自动收款系统</div>
+            <button class="btn" style="width:100%; background:#07c160; color:white;" onclick="handlePayment()">我已付款，开始下单</button>
+            <button onclick="document.getElementById('modal-checkout').style.display='none'" style="background:none; border:none; color:#999; margin-top:10px;">取消</button>
         </div>
     </div>
 
-    <div id="panel-status" class="item-card" style="display:none; position:fixed; top:20px; z-index:1001; text-align:center; width: 90%; max-width: 400px;">
+    <div id="panel-status" class="card" style="display:none; position:fixed; top:20px; z-index:1001; text-align:center;">
         <h3>订单进度</h3>
-        <p id="statusText" style="font-size:18px; color:#07c160;">正在处理...</p>
+        <p id="statusText" style="font-size:20px; color:#07c160;">...</p>
     </div>
 
     <script>
         const client = supabase.createClient("https://dzesfxynbljtkwsbhbvq.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZXNmeHluYmxqdGt3c2JoYnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTI1NjksImV4cCI6MjA5ODI2ODU2OX0.fcpHEdZUqNABHa1fZ0AJtkucwj-MYRPuSzDoQxkkLLk");
         let cart = [];
 
-        function addToCart(name, price) {
-            let item = cart.find(i => i.name === name);
-            item ? item.count++ : cart.push({ name, price, count: 1 });
-            alert(name + " 已添加");
-        }
-
-        function openCart() {
-            if (cart.length === 0) { alert("购物车是空的哦！"); return; }
+        // 逻辑控制：打开面板二
+        function openCheckout() {
             let total = cart.reduce((sum, i) => sum + (i.price * i.count), 0);
-            document.getElementById('cart-details').innerHTML = cart.map(i => `<div>${i.name} x${i.count} = ¥${i.price * i.count}</div>`).join('');
-            document.getElementById('total-price').innerText = '¥' + total;
-            document.getElementById('modal-cart').style.display = 'flex';
+            document.getElementById('checkout-details').innerHTML = cart.map(i => `${i.name} x${i.count}`).join('<br>');
+            document.getElementById('checkout-price').innerText = '¥' + total;
+            document.getElementById('modal-checkout').style.display = 'flex';
         }
 
-        async function startOrderFlow() {
-            let name = prompt("请输入您的称呼，方便店主对单：");
+        // 逻辑控制：执行支付流程
+        async function handlePayment() {
+            let name = prompt("请输入您的姓名：");
             if (!name) return;
-            document.getElementById('modal-cart').style.display = 'none';
+            document.getElementById('modal-checkout').style.display = 'none';
             document.getElementById('panel-status').style.display = 'block';
-            let total = cart.reduce((sum, i) => sum + (i.price * i.count), 0);
-            await client.from('orders').insert([{ customer_name: name, total_price: total, items: cart.map(i=>i.name).join(','), status: 'paid' }]);
-            const steps = ["已收到款，备餐中...", "骑手已接单...", "骑手正在前往...", "取餐成功...", "正在送餐...", "已送达!", "五星好评!"];
-            for(let step of steps) {
-                document.getElementById('statusText').innerText = step;
-                await new Promise(r => setTimeout(r, 2000));
-            }
+            
+            // 此处后续可升级为商家后台录入接口
+            await client.from('orders').insert([{ customer_name: name, total_price: 0, status: 'paid' }]);
+            
+            const steps = ["已收到款，备餐中...", "骑手已接单...", "送达完成！"];
+            for(let s of steps) { document.getElementById('statusText').innerText = s; await new Promise(r => setTimeout(r, 2000)); }
         }
 
-        async function fetchProducts() {
+        // 初始化加载
+        async function init() {
             const { data } = await client.from('products').select('*');
-            document.getElementById('menu').innerHTML = data.map(item => `
-                <div class="item-card">
-                    ${item.image_url ? `<img src="${item.image_url}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;">` : ''}
-                    <div class="info"><strong>${item.name}</strong><br><div class="price">¥${item.price}</div></div>
-                    <button class="btn-order" onclick="addToCart('${item.name}', ${item.price})">+</button>
-                </div>
+            document.getElementById('menu-list').innerHTML = data.map(item => `
+                <div class="card"><strong>${item.name}</strong> - ¥${item.price} 
+                <button class="btn" onclick="cart.push({name:'${item.name}', price:${item.price}, count:1}); openCheckout();">+</button></div>
             `).join('');
         }
-        fetchProducts();
+        init();
     </script>
 </body>
 </html>
