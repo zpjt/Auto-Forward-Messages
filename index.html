@@ -11,6 +11,8 @@
         .info { flex: 1; margin-left: 15px; }
         .price { color: #ffcc00; font-weight: bold; margin-top: 5px; }
         .btn-order { background: #ffcc00; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; color: #1a2332; }
+        /* 新增：模态框样式 */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
@@ -18,72 +20,69 @@
     <div style="background: #fff4e5; padding: 15px; border-radius: 10px; margin: 10px; border: 1px solid #ffd591; text-align: center; width: 100%; max-width: 500px; box-sizing: border-box;">
         <h3 style="color: #d46b08; margin: 0;">🎁 1元豪华大礼包</h3>
         <p style="font-size: 14px; color: #595959; margin: 10px 0;">购买即有机会赢取最高 99元红包！<br>最低也可获得 6.6元会员金！100%中奖！</p>
-        <button onclick="alert('活动火热进行中！请咨询店主了解如何参与抢购，获取您的幸运红包。')" 
-                style="background: #ff7875; color: white; border: none; padding: 10px 25px; border-radius: 20px; font-weight: bold; cursor: pointer;">
-            立即抢购 (剩余名额有限)
-        </button>
-    </div>
-
-    <div style="position: fixed; bottom: 80px; right: 20px; z-index: 999;">
-        <button onclick="openCart()" style="background: #ffcc00; color: #1a2332; border: none; padding: 15px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); font-weight: bold; cursor: pointer;">
-            🛒
-        </button>
+        <button onclick="alert('活动火热进行中！请咨询店主了解如何参与抢购，获取您的幸运红包。')" style="background: #ff7875; color: white; border: none; padding: 10px 25px; border-radius: 20px; font-weight: bold; cursor: pointer;">立即抢购</button>
     </div>
 
     <div id="menu" style="width: 100%; max-width: 500px;">Loading...</div>
-    <button onclick="addProduct()" style="margin-top:20px; background:none; border:1px solid #333; color:#666; padding:5px 15px; border-radius:5px; cursor:pointer;">+ 添加新商品</button>
+    
+    <div style="position: fixed; bottom: 80px; right: 20px; z-index: 999;">
+        <button onclick="openCart()" style="background: #ffcc00; color: #1a2332; border: none; padding: 15px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer;">🛒</button>
+    </div>
+
+    <div id="modal-cart" class="modal">
+        <div class="item-card" style="flex-direction: column; width: 80%; max-width: 300px; text-align: center;">
+            <h3>核对订单</h3>
+            <div id="cart-details" style="margin: 10px 0; text-align: left; width: 100%;"></div>
+            <p>总计: <span id="total-price" style="color: #ffcc00; font-size: 20px;">¥0</span></p>
+            <button class="btn-order" style="width: 100%;" onclick="startOrderFlow()">去支付 (跳转收银台)</button>
+            <button onclick="document.getElementById('modal-cart').style.display='none'" style="background:none; border:none; color:#666; margin-top:10px;">关闭</button>
+        </div>
+    </div>
+
+    <div id="panel-status" class="item-card" style="display:none; position:fixed; top:20px; z-index:1001; text-align:center;">
+        <h3>订单进度</h3>
+        <p id="statusText" style="font-size:18px; color:#07c160;">正在处理...</p>
+    </div>
 
     <script>
-        const client = supabase.createClient(
-            "https://dzesfxynbljtkwsbhbvq.supabase.co",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZXNmeHluYmxqdGt3c2JoYnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTI1NjksImV4cCI6MjA5ODI2ODU2OX0.fcpHEdZUqNABHa1fZ0AJtkucwj-MYRPuSzDoQxkkLLk"
-        );
-
-        // --- 购物车核心逻辑 ---
+        const client = supabase.createClient("https://dzesfxynbljtkwsbhbvq.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZXNmeHluYmxqdGt3c2JoYnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTI1NjksImV4cCI6MjA5ODI2ODU2OX0.fcpHEdZUqNABHa1fZ0AJtkucwj-MYRPuSzDoQxkkLLk");
         let cart = [];
 
         function addToCart(name, price) {
-            cart.push({ name, price });
-            alert(name + " 已加入购物车！(共 " + cart.length + " 件)");
+            let item = cart.find(i => i.name === name);
+            item ? item.count++ : cart.push({ name, price, count: 1 });
+            alert(name + " 已加入购物车");
         }
 
         function openCart() {
-            if (cart.length === 0) {
-                alert("购物车还是空的哦！");
-                return;
-            }
-            let total = cart.reduce((sum, item) => sum + parseFloat(item.price), 0);
-            let names = cart.map(item => item.name).join(", ");
-            alert("【购物车明细】\n" + names + "\n\n总计: ¥" + total + "\n\n支付功能开发中，敬请期待！");
+            if (cart.length === 0) { alert("购物车还是空的哦！"); return; }
+            let total = cart.reduce((sum, item) => sum + (item.price * item.count), 0);
+            document.getElementById('cart-details').innerHTML = cart.map(i => `<div>${i.name} x${i.count} = ¥${i.price * i.count}</div>`).join('');
+            document.getElementById('total-price').innerText = '¥' + total;
+            document.getElementById('modal-cart').style.display = 'flex';
         }
 
-        // --- 数据渲染逻辑 ---
+        async function startOrderFlow() {
+            if(!confirm("请确认转账并输入正确金额，支付完成后点击确认。")) return;
+            document.getElementById('modal-cart').style.display = 'none';
+            document.getElementById('panel-status').style.display = 'block';
+            const steps = ["已收到款，备餐中...", "骑手已接单...", "骑手正在前往...", "取餐成功...", "正在送餐...", "已送达!", "五星好评!"];
+            for(let step of steps) {
+                document.getElementById('statusText').innerText = step;
+                await new Promise(r => setTimeout(r, 2000));
+            }
+        }
+
         async function fetchProducts() {
             const { data } = await client.from('products').select('*');
             document.getElementById('menu').innerHTML = data.map(item => `
                 <div class="item-card">
                     ${item.image_url ? `<img src="${item.image_url}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;">` : ''}
-                    <div class="info">
-                        <strong>${item.name}</strong><br>
-                        <small style="color:#9ca3af">${item.description || ''}</small>
-                        <div class="price">¥${item.price}</div>
-                    </div>
-                    <button class="btn-order" onclick="addToCart('${item.name}', ${item.price})">加入购物车</button>
+                    <div class="info"><strong>${item.name}</strong><br><small style="color:#9ca3af">${item.description || ''}</small><div class="price">¥${item.price}</div></div>
+                    <button class="btn-order" onclick="addToCart('${item.name}', ${item.price})">+</button>
                 </div>
             `).join('');
         }
-
-        async function addProduct() {
-            const name = prompt("商品名称:");
-            const price = prompt("价格:");
-            const img = prompt("图片直链 (可留空):");
-            const desc = prompt("简单描述 (可留空):");
-            if (name && price) {
-                await client.from('products').insert([{ name, price, image_url: img, description: desc }]);
-                fetchProducts();
-            }
-        }
-        
         fetchProducts();
     </script>
 </body>
