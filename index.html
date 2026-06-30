@@ -2,58 +2,49 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ICBC 聚合支付系统</title>
+    <title>ICBC 聚合外卖平台</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        body { margin: 0; background: #f8f9fa; font-family: "PingFang SC", sans-serif; padding-bottom: 70px; }
-        .tab-view { display: none; }
-        .active { display: block; }
-        .card { background: white; margin: 12px; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
-        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #eee; z-index: 999; }
-        
-        /* 增强版工行支付弹窗 */
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
-        .icbc-container { background: #fff; width: 85%; border-radius: 12px; overflow: hidden; text-align: center; }
-        .icbc-top { background: #004a99; color: white; padding: 20px; }
-        .icbc-body { padding: 20px; }
-        .btn-pay { width: 90%; background: #004a99; color: white; padding: 12px; border-radius: 6px; border: none; font-size: 16px; margin-top: 10px; }
+        body { margin: 0; background: #f4f4f4; font-family: sans-serif; padding-bottom: 70px; }
+        .tab-view { display: none; } .active { display: block; }
+        .card { background: white; margin: 10px; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #ddd; }
+        /* 支付 UI */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; }
+        .icbc-box { background: white; width: 85%; border-radius: 12px; text-align: center; }
+        .icbc-header { background: #004a99; color: white; padding: 15px; border-radius: 12px 12px 0 0; }
+        .btn-pay { width: 85%; background: #004a99; color: white; padding: 12px; border-radius: 25px; border: none; margin: 20px 0; }
     </style>
 </head>
 <body>
 
     <div id="view-home" class="tab-view active">
-        <div style="padding:20px; font-size:18px; font-weight:bold;">热门商户</div>
+        <div style="padding:20px; font-weight:bold; font-size:18px;">热门商户</div>
         <div id="store-list">加载中...</div>
     </div>
 
+    <div id="view-shop" class="tab-view">
+        <div style="padding:20px; font-weight:bold; background:white;" onclick="switchTab('view-home')"> < 返回</div>
+        <div id="shop-name" style="padding:10px 20px; font-size:20px;">店铺名</div>
+        <div id="product-list"></div>
+    </div>
+
     <div id="view-cart" class="tab-view">
-        <div style="padding:20px; font-size:18px; font-weight:bold;">购物车结算</div>
-        <div id="cart-list" style="padding:10px;">您的购物车是空的</div>
+        <div style="padding:20px; font-weight:bold;">购物车</div>
+        <div id="cart-list"></div>
     </div>
 
     <div id="view-orders" class="tab-view">
-        <div style="padding:20px; font-size:18px; font-weight:bold;">交易记录</div>
-        <div id="order-list">暂无订单</div>
-    </div>
-
-    <div id="view-admin" class="tab-view">
-        <div style="padding:20px; font-size:18px; font-weight:bold;">系统管理</div>
-        <div class="card">
-            <input id="store-input" placeholder="请输入商家名称" style="border:none; width:70%;">
-            <button onclick="addStore()" style="background:#004a99; color:white; border:none; padding:5px 10px;">添加</button>
-        </div>
+        <div style="padding:20px; font-weight:bold;">全部订单</div>
+        <div id="order-list"></div>
     </div>
 
     <div id="modal-pay" class="modal">
-        <div class="icbc-container">
-            <div class="icbc-top">中国工商银行支付</div>
-            <div class="icbc-body">
-                <p>订单金额: <b style="font-size:24px;">¥19.90</b></p>
-                <img src="https://i.ibb.co/BKf8xrTP/IMG-1422.jpg" style="width:180px; border:1px solid #eee; padding:5px;">
-                <p style="font-size:12px; color:#888;">请使用手机银行或扫码完成支付</p>
-                <button class="btn-pay" onclick="executePayment()">已完成支付</button>
-            </div>
+        <div class="icbc-box">
+            <div class="icbc-header">工商银行聚合支付</div>
+            <img src="https://i.ibb.co/BKf8xrTP/IMG-1422.jpg" style="width:150px; margin:20px;">
+            <p>需付款: <b id="pay-amount">¥0</b></p>
+            <button class="btn-pay" onclick="executePayment()">确认支付</button>
         </div>
     </div>
 
@@ -61,11 +52,10 @@
         <div onclick="switchTab('view-home')">🏠 首页</div>
         <div onclick="switchTab('view-cart')">🛒 购物车</div>
         <div onclick="switchTab('view-orders')">📋 订单</div>
-        <div onclick="switchTab('view-admin')">⚙️ 管理</div>
     </div>
 
     <script>
-        const client = supabase.createClient("https://dzesfxynbljtkwsbhbvq.supabase.co", "sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ");
+        const client = supabase.createClient("...", "..."); // 填入你的密钥
         let cart = [];
 
         function switchTab(id) {
@@ -74,53 +64,54 @@
             if(id === 'view-orders') loadOrders();
         }
 
+        // 1. 加载首页商家 (点击进入店铺)
         async function loadStores() {
             const { data } = await client.from('stores').select('*');
             document.getElementById('store-list').innerHTML = data?.map(s => `
-                <div class="card">
-                    <div><b>${s.name}</b></div>
-                    <button onclick="addToCart('${s.name}')" style="background:#ffcc00; border:none; padding:5px 15px; border-radius:15px;">添加</button>
+                <div class="card" onclick="enterShop('${s.name}')">
+                    <h3>${s.name}</h3>
+                    <span>进入店铺 ></span>
                 </div>
-            `).join('') || '暂无商家';
+            `).join('');
         }
 
-        function addToCart(name) {
-            cart.push(name);
-            alert("已加入: " + name);
-            document.getElementById('cart-list').innerHTML = `
-                <div class="card">
-                    <div>${cart.join(' + ')}</div>
-                    <button class="btn-pay" style="width:auto; padding:5px 15px;" onclick="document.getElementById('modal-pay').style.display='flex'">去支付</button>
-                </div>
+        // 2. 进入店铺显示菜品
+        function enterShop(name) {
+            document.getElementById('shop-name').innerText = name;
+            switchTab('view-shop');
+            // 模拟菜品
+            document.getElementById('product-list').innerHTML = `
+                <div class="card">菜品A - ¥15 <button onclick="addToCart('菜品A', 15)">加入</button></div>
+                <div class="card">菜品B - ¥20 <button onclick="addToCart('菜品B', 20)">加入</button></div>
             `;
         }
 
+        function addToCart(name, price) {
+            cart.push({name, price});
+            alert("已加入购物车");
+        }
+
+        // 3. 购物车结算
+        function showCart() {
+            switchTab('view-cart');
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            document.getElementById('cart-list').innerHTML = `
+                ${cart.map(i => `<div class="card">${i.name} - ¥${i.price}</div>`).join('')}
+                <div class="card">总计: ¥${total} <button class="btn-pay" onclick="openPay(${total})">结算</button></div>
+            `;
+        }
+
+        function openPay(amount) {
+            document.getElementById('pay-amount').innerText = "¥" + amount;
+            document.getElementById('modal-pay').style.display = 'flex';
+        }
+
         async function executePayment() {
-            const btn = document.querySelector('.btn-pay');
-            btn.innerText = "处理中...";
-            await client.from('orders').insert([{ items: cart.join(','), status: 'paid' }]);
-            alert("支付验证成功！");
-            document.getElementById('modal-pay').style.display = 'none';
-            btn.innerText = "已完成支付";
+            await client.from('orders').insert([{ items: JSON.stringify(cart), status: 'paid' }]);
+            alert("支付成功");
             cart = [];
+            document.getElementById('modal-pay').style.display = 'none';
             switchTab('view-orders');
-        }
-
-        async function addStore() {
-            const name = document.getElementById('store-input').value;
-            await client.from('stores').insert([{ name: name }]);
-            alert("商家已添加");
-            loadStores();
-        }
-
-        async function loadOrders() {
-            const { data } = await client.from('orders').select('*').order('created_at', {ascending:false});
-            document.getElementById('order-list').innerHTML = data?.map(o => `
-                <div class="card">
-                    <div>${o.items}</div>
-                    <div style="color:green; font-weight:bold;">已入账</div>
-                </div>
-            `).join('') || '暂无记录';
         }
 
         loadStores();
