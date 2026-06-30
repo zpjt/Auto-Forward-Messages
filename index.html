@@ -10,22 +10,27 @@
         .item-card { background: #1a2332; width: 100%; max-width: 500px; padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; border: 1px solid #334155; }
         .info { flex: 1; margin-left: 15px; }
         .price { color: #ffcc00; font-weight: bold; margin-top: 5px; }
-        .btn-order { background: #ffcc00; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        .btn-order { background: #ffcc00; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; color: #1a2332; }
     </style>
 </head>
 <body>
     
-    <!-- 福利入口模块 -->
-<div style="background: #fff4e5; padding: 15px; border-radius: 10px; margin: 10px; border: 1px solid #ffd591; text-align: center;">
-    <h3 style="color: #d46b08; margin: 0;">🎁 1元豪华大礼包</h3>
-    <p style="font-size: 14px; color: #595959; margin: 10px 0;">购买即有机会赢取最高 99元红包！<br>最低也可获得 6.6元会员金！100%中奖！</p>
-    <button onclick="alert('活动火热进行中！请咨询店主了解如何参与抢购，获取您的幸运红包。')" 
-            style="background: #ff7875; color: white; border: none; padding: 10px 25px; border-radius: 20px; font-weight: bold; cursor: pointer;">
-        立即抢购 (剩余名额有限)
-    </button>
-</div>
+    <div style="background: #fff4e5; padding: 15px; border-radius: 10px; margin: 10px; border: 1px solid #ffd591; text-align: center; width: 100%; max-width: 500px; box-sizing: border-box;">
+        <h3 style="color: #d46b08; margin: 0;">🎁 1元豪华大礼包</h3>
+        <p style="font-size: 14px; color: #595959; margin: 10px 0;">购买即有机会赢取最高 99元红包！<br>最低也可获得 6.6元会员金！100%中奖！</p>
+        <button onclick="alert('活动火热进行中！请咨询店主了解如何参与抢购，获取您的幸运红包。')" 
+                style="background: #ff7875; color: white; border: none; padding: 10px 25px; border-radius: 20px; font-weight: bold; cursor: pointer;">
+            立即抢购 (剩余名额有限)
+        </button>
+    </div>
 
-    <div id="menu">Loading...</div>
+    <div style="position: fixed; bottom: 80px; right: 20px; z-index: 999;">
+        <button onclick="openCart()" style="background: #ffcc00; color: #1a2332; border: none; padding: 15px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); font-weight: bold; cursor: pointer;">
+            🛒
+        </button>
+    </div>
+
+    <div id="menu" style="width: 100%; max-width: 500px;">Loading...</div>
     <button onclick="addProduct()" style="margin-top:20px; background:none; border:1px solid #333; color:#666; padding:5px 15px; border-radius:5px; cursor:pointer;">+ 添加新商品</button>
 
     <script>
@@ -34,6 +39,25 @@
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZXNmeHluYmxqdGt3c2JoYnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTI1NjksImV4cCI6MjA5ODI2ODU2OX0.fcpHEdZUqNABHa1fZ0AJtkucwj-MYRPuSzDoQxkkLLk"
         );
 
+        // --- 购物车核心逻辑 ---
+        let cart = [];
+
+        function addToCart(name, price) {
+            cart.push({ name, price });
+            alert(name + " 已加入购物车！(共 " + cart.length + " 件)");
+        }
+
+        function openCart() {
+            if (cart.length === 0) {
+                alert("购物车还是空的哦！");
+                return;
+            }
+            let total = cart.reduce((sum, item) => sum + parseFloat(item.price), 0);
+            let names = cart.map(item => item.name).join(", ");
+            alert("【购物车明细】\n" + names + "\n\n总计: ¥" + total + "\n\n支付功能开发中，敬请期待！");
+        }
+
+        // --- 数据渲染逻辑 ---
         async function fetchProducts() {
             const { data } = await client.from('products').select('*');
             document.getElementById('menu').innerHTML = data.map(item => `
@@ -44,7 +68,7 @@
                         <small style="color:#9ca3af">${item.description || ''}</small>
                         <div class="price">¥${item.price}</div>
                     </div>
-                    <button class="btn-order">下单</button>
+                    <button class="btn-order" onclick="addToCart('${item.name}', ${item.price})">加入购物车</button>
                 </div>
             `).join('');
         }
@@ -59,6 +83,7 @@
                 fetchProducts();
             }
         }
+        
         fetchProducts();
     </script>
 </body>
