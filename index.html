@@ -3,21 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>轻量化外卖系统</title>
+    <title>外卖系统</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         body { margin: 0; background: #f8f8f8; font-family: sans-serif; padding-bottom: 70px; }
+        .card { background: white; margin: 10px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
         .tab-content { display: none; padding: 15px; }
         .active { display: block; }
         .nav-fixed { position: fixed; bottom: 0; width: 100%; height: 60px; background: #fff; display: flex; justify-content: space-around; border-top: 1px solid #ddd; align-items: center; z-index: 999; }
-        .card { background: white; margin: 10px 0; padding: 12px; border-radius: 12px; display: flex; box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer; }
-        .card img { width: 90px; height: 90px; border-radius: 8px; object-fit: cover; margin-right: 12px; }
-        .content { flex-grow: 1; }
-        .content h3 { margin: 0 0 5px 0; font-size: 16px; }
-        .content p { margin: 2px 0; font-size: 12px; color: #666; }
-        .tag { background: #fff3e0; color: #ff9800; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
-        button { border: none; background: none; font-size: 14px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -27,21 +20,6 @@
         <div id="store-container">加载中...</div>
     </div>
 
-    <div id="tab-promo" class="tab-content">
-        <h2>限时特价</h2>
-        <div id="promo-container">暂无特价商品</div>
-    </div>
-
-    <div id="tab-orders" class="tab-content">
-        <h2>我的订单</h2>
-        <div id="order-container">暂无订单</div>
-    </div>
-
-    <div id="tab-profile" class="tab-content">
-        <h2>账户中心</h2>
-        <div class="card" style="cursor: default;">联系方式: 138-xxxx-xxxx</div>
-    </div>
-
     <nav class="nav-fixed">
         <button onclick="showTab('tab-home')">🏠 主页</button>
         <button onclick="showTab('tab-promo')">🔥 特价</button>
@@ -49,22 +27,33 @@
         <button onclick="showTab('tab-profile')">👤 我</button>
     </nav>
 
-    <div id="modal-checkout" class="modal" onclick="this.style.display='none'">
-        <div class="card" style="width: 90%; max-width: 350px; flex-direction: column; text-align: center;" onclick="event.stopPropagation()">
-            <div style="background: #004a99; color: white; padding: 10px; border-radius: 8px; width: 100%;">工商银行·便捷支付</div>
-            <img src="https://i.ibb.co/BKf8xrTP/IMG-1422.jpg" style="width: 160px; height: 160px; margin: 15px auto;">
-            <p>应付: <span style="color: red; font-size: 24px;">¥0</span></p>
-            <button style="width: 100%; background: #004a99; color: white; padding: 12px; border-radius: 8px;" onclick="handlePayment()">我已付款，下单确认</button>
-        </div>
-    </div>
-
     <script>
-        const client = supabase.createClient("https://dzesfxynbljtkwsbhbvq.supabase.co", "sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ");
+        const client = supabase.createClient(
+            "https://dzesfxynbljtkwsbhbvq.supabase.co", 
+            "sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ"
+        );
 
         function showTab(id) {
             document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
             document.getElementById(id).style.display = 'block';
         }
 
-        async function handlePayment() {
-            document.getElementById('modal-checkout').style.
+        async function initData() {
+            try {
+                const { data, error } = await client.from('stores').select('*');
+                if (error) { console.error(error); return; }
+                
+                document.getElementById('store-container').innerHTML = data.map(s => `
+                    <div class="card">
+                        <h3>${s.name || '未命名'}</h3>
+                        <p>${s.description || '暂无描述'}</p>
+                    </div>
+                `).join('');
+            } catch(e) {
+                console.error("系统错误", e);
+            }
+        }
+        initData();
+    </script>
+</body>
+</html>
