@@ -6,13 +6,32 @@
     <title>轻量化外卖系统</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        body { margin: 0; background: #f8f8f8; font-family: sans-serif; padding-bottom: 70px; }
-        .tab-content { display: none; padding: 15px; }
-        .active { display: block; }
-        .nav-fixed { position: fixed; bottom: 0; width: 100%; height: 60px; background: #fff; display: flex; justify-content: space-around; border-top: 1px solid #ddd; align-items: center; z-index: 999; }
-        .card { background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
-        button { border: none; background: none; font-size: 14px; cursor: pointer; }
+        <style>
+    /* 核心样式：美团风格卡片 */
+    .card { background: white; margin: 10px; padding: 12px; border-radius: 12px; display: flex; box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer; }
+    .card img { width: 90px; height: 90px; border-radius: 8px; object-fit: cover; margin-right: 12px; }
+    .content { flex-grow: 1; }
+    .content h3 { margin: 0 0 5px 0; font-size: 16px; }
+    .content p { margin: 2px 0; font-size: 12px; color: #666; }
+    .tag { background: #fff3e0; color: #ff9800; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+</style>
+
+<script>
+    async function initData() {
+        const { data: stores } = await client.from('stores').select('*');
+        if(stores) document.getElementById('store-container').innerHTML = stores.map(s => `
+            <div class="card" onclick="document.getElementById('modal-checkout').style.display='flex'">
+                <img src="${s.img_url || 'https://i.ibb.co/BKf8xrTP/IMG-1422.jpg'}">
+                <div class="content">
+                    <h3>${s.name}</h3>
+                    <p>月售 ${s.sales || '99+'} | 约 ${s.delivery_time || '30分钟'}</p>
+                    <span class="tag">品质商家</span>
+                </div>
+            </div>
+        `).join('');
+    }
+  </script>
+
     </style>
 </head>
 <body>
