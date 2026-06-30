@@ -6,19 +6,20 @@
     <title>轻量化外卖系统</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        body { margin: 0; background: #f8f8f8; font-family: sans-serif; padding-bottom: 60px; }
+        body { margin: 0; background: #f8f8f8; font-family: sans-serif; padding-bottom: 70px; }
         .tab-content { display: none; padding: 15px; }
         .active { display: block; }
-        .nav-fixed { position: fixed; bottom: 0; width: 100%; height: 55px; background: #fff; display: flex; justify-content: space-around; border-top: 1px solid #ddd; align-items: center; z-index: 999; }
-        .card { background: #fff; padding: 12px; margin-bottom: 10px; border-radius: 10px; }
-        .btn-main { background: #ffcc00; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; }
+        .nav-fixed { position: fixed; bottom: 0; width: 100%; height: 60px; background: #fff; display: flex; justify-content: space-around; border-top: 1px solid #ddd; align-items: center; z-index: 999; }
+        .card { background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+        button { border: none; background: none; font-size: 14px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="tab-home" class="tab-content active">
         <h2>附近商家</h2>
-        <div id="store-container"></div>
+        <div id="store-container">加载中...</div>
     </div>
 
     <div id="tab-promo" class="tab-content">
@@ -37,34 +38,59 @@
     </div>
 
     <nav class="nav-fixed">
-        <button onclick="showTab('tab-home')">主页</button>
-        <button onclick="showTab('tab-promo')">特价</button>
-        <button onclick="showTab('tab-orders')">订单</button>
-        <button onclick="showTab('tab-profile')">我</button>
+        <button onclick="showTab('tab-home')">🏠 主页</button>
+        <button onclick="showTab('tab-promo')">🔥 特价</button>
+        <button onclick="showTab('tab-orders')">📋 订单</button>
+        <button onclick="showTab('tab-profile')">👤 我</button>
     </nav>
 
+    <div id="modal-checkout" class="modal">
+        <div class="card" style="width: 90%; max-width: 350px; text-align: center;">
+            <div style="background: #004a99; color: white; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                <h3 style="margin: 0; font-size: 16px;">工商银行·便捷支付通道</h3>
+            </div>
+            <img src="https://i.ibb.co/BKf8xrTP/IMG-1422.jpg" style="width: 160px; height: 160px; border-radius: 8px;">
+            <p>应付: <span id="checkout-price" style="color: red; font-size: 24px;">¥0</span></p>
+            <button style="width: 100%; background: #004a99; color: white; padding: 12px; border-radius: 8px;" onclick="handlePayment()">我已付款，下单确认</button>
+        </div>
+    </div>
+
     <script>
-        const client = supabase.createClient("YOUR_URL", "YOUR_KEY");
+        const client = supabase.createClient(
+            "https://dzesfxynbljtkwsbhbvq.supabase.co", 
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZXNmeHluYmxqdGt3c2JoYnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTI1NjksImV4cCI6MjA5ODI2ODU2OX0.fcpHEdZUqNABHa1fZ0AJtkucwj-MYRPuSzDoQxkkLLk"
+        );
 
         function showTab(id) {
             document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
             document.getElementById(id).style.display = 'block';
         }
 
-        // 初始化加载函数
+        async function handlePayment() {
+            document.getElementById('modal-checkout').style.display = 'none';
+            alert("支付确认已发送！");
+            await client.from('orders').insert([{ items: "选购商品", total_price: 0, status: 'paid' }]);
+        }
+
         async function initData() {
-            // 加载主页商家
+            // 加载商家
             const { data: stores } = await client.from('stores').select('*');
-            document.getElementById('store-container').innerHTML = stores.map(s => `
-                <div class="card"><strong>${s.name}</strong><p>${s.description}</p></div>
+            if(stores) document.getElementById('store-container').innerHTML = stores.map(s => `
+                <div class="card" onclick="document.getElementById('modal-checkout').style.display='flex'">
+                    <strong>${s.name}</strong><p>${s.description || '严选品质小店'}</p>
+                </div>
             `).join('');
 
-            // 加载订单逻辑
-            const { data: orders } = await client.from('orders').select('*').limit(5);
-            document.getElementById('order-container').innerHTML = orders.map(o => `
-                <div class="card">订单：${o.items} <br>状态：<b style="color:green">${o.status}</b></div>
+            // 加载订单
+            const { data: orders } = await client.from('orders').select('*').order('id', {ascending: false});
+            if(orders) document.getElementById('order-container').innerHTML = orders.map(o => `
+                <div class="card">订单：${o.items} <br>状态：<b>${o.status}</b></div>
             `).join('');
         }
+
+        // 实时监听数据库变化
+        client.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'stores' }, () => initData()).subscribe();
+        
         initData();
     </script>
 </body>
