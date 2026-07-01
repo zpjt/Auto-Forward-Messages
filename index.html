@@ -1,91 +1,71 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>外卖代付系统</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-:root{ --bg:#f5f5f5; --primary:#ffd000; }
-body{margin:0;font-family:sans-serif;background:var(--bg);padding-bottom:50px}
-.nav{padding:15px;background:#fff;font-weight:bold;border-bottom:1px solid #eee;position:sticky;top:0;z-index:100}
-.card{background:#fff;border-radius:15px;padding:20px;margin:15px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
-.btn{width:100%;padding:12px;border:0;border-radius:10px;font-weight:bold;cursor:pointer;margin-top:10px;background:#eee}
-.btn-primary{background:var(--primary);color:#000}
-input{width:100%;padding:12px;border:1px solid #eee;border-radius:10px;margin-top:10px;box-sizing:border-box}
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>外卖代付系统</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f5f5f5; padding: 20px; }
+        .card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; background: #eee; }
+        .btn-primary { background: #ffd000; color: #000; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; margin-top: 10px; box-sizing: border-box; }
+    </style>
 </head>
 <body>
 
-<div class="nav">📋 订单代付系统</div>
-
 <div class="card">
-  <h3>⚡ 快捷点餐</h3>
-  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-    <button class="btn" onclick="setOrder(19.8, '牛肉丸汤')">牛肉丸 ¥19.8</button>
-    <button class="btn" onclick="setOrder(39.0, '特色套餐')">套餐 ¥39.0</button>
-    <button class="btn" onclick="setOrder(82.8, '豪华外卖')">外卖 ¥82.8</button>
-    <button class="btn" onclick="setOrder(88.0, '超级大餐')">大餐 ¥88.0</button>
-  </div>
-  <input type="number" id="custom-amount" placeholder="输入自定义金额 (1-999)">
-  <button class="btn btn-primary" onclick="createCustomOrder()">创建订单</button>
+    <h3>🍴 精选菜单</h3>
+    <div class="menu-grid" id="menu-list"></div>
+    <div style="margin-top:10px;">
+        <input type="number" id="custom-amount" placeholder="输入其他金额 (1-999)">
+        <button class="btn btn-primary" onclick="handlePay()">确认并唤起支付宝</button>
+    </div>
 </div>
 
-<div id="order-list"></div>
-
 <script>
-const SUPABASE_URL = 'https://dzesfxynbljtkwsbhbvq.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZXNmeHluYmxqdGt3c2JoYnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTI1NjksImV4cCI6MjA5ODI2ODU2OX0.fcpHEdZUqNABHa1fZ0AJtkucwj-MYRPuSzDoQxkkLLk';
-const MY_ALIPAY_LINK = 'https://qr.alipay.com/fkx14343tq2hks1lq1v2z99'; 
+    // 菜单配置：你可以在这里随意添加菜品和价格
+    const menu = [
+        { name: "牛肉丸汤", price: 19.8 },
+        { name: "特色炒饭", price: 25.0 },
+        { name: "豪华双人餐", price: 82.8 },
+        { name: "超级大餐", price: 99.0 }
+    ];
 
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const ALIPAY_QR_URL = "https://qr.alipay.com/fkx14343tq2hks1lq1v2z99";
 
-let currentAmount = 82.8;
+    // 初始化菜单显示
+    const menuList = document.getElementById('menu-list');
+    menu.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.innerText = `${item.name} ¥${item.price}`;
+        btn.onclick = () => {
+            document.getElementById('custom-amount').value = item.price;
+            alert(`已选: ${item.name}，金额已自动填入`);
+        };
+        menuList.appendChild(btn);
+    });
 
-function setOrder(amount, name) {
-  currentAmount = amount;
-  document.getElementById('custom-amount').value = amount;
-}
+    // 支付跳转逻辑
+    function handlePay() {
+        const amount = document.getElementById('custom-amount').value;
+        if (!amount || amount < 1 || amount > 999) {
+            alert("请输入 1-999 之间的有效金额");
+            return;
+        }
 
-async function createCustomOrder() {
-  const amount = parseFloat(document.getElementById('custom-amount').value || currentAmount);
-  if (amount < 1 || amount > 999) return alert("金额请控制在 1-999 之间");
+        const scheme = `alipays://platformapi/startapp?saId=10000007&qrcode=${encodeURIComponent(ALIPAY_QR_URL)}`;
+        window.location.href = scheme;
 
-  const { error } = await client.from('orders').insert([{ total: amount, status: '待支付' }]);
-  if (!error) {
-    alert('订单已创建！');
-    fetchOrders();
-  } else {
-    alert('创建失败: ' + error.message);
-  }
-}
-
-async function fetchOrders() {
-  const { data } = await client.from('orders').select('*').order('id', { ascending: false });
-  const container = document.getElementById('order-list');
-  
-  if (!data || data.length === 0) {
-    container.innerHTML = '<div class="card">暂无订单</div>';
-    return;
-  }
-
-  container.innerHTML = data.map(order => `
-    <div class="card">
-      <div style="font-size:14px;color:#888;">需付款</div>
-      <div style="font-size:24px;font-weight:bold;margin:5px 0;">¥${Number(order.total).toFixed(2)}</div>
-      <a href="${MY_ALIPAY_LINK}" target="_blank"><button class="btn btn-primary">为好友买单</button></a>
-      <button class="btn" onclick="simulatePay(${order.id})">我已支付，点击确认</button>
-    </div>
-  `).join('');
-}
-
-async function simulatePay(id) {
-  await client.from('orders').update({ status: '已支付' }).eq('id', id);
-  alert('订单已确认！');
-  fetchOrders();
-}
-
-fetchOrders();
+        setTimeout(() => {
+            if (confirm("未能自动跳转？点击确定手动前往支付页面。")) {
+                window.open(ALIPAY_QR_URL, '_blank');
+            }
+        }, 2000);
+    }
 </script>
 </body>
 </html>
