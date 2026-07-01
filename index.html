@@ -18,10 +18,10 @@
     <div class="card">
         <h3>🍴 请选择菜品</h3>
         <div class="menu-grid" id="menu-list">
-            <button class="btn" onclick="setAmount(19.8)">牛肉丸汤 ¥19.8</button>
-            <button class="btn" onclick="setAmount(39.0)">特色套餐 ¥39.0</button>
-            <button class="btn" onclick="setAmount(82.8)">豪华外卖 ¥82.8</button>
-            <button class="btn" onclick="setAmount(88.0)">超级大餐 ¥88.0</button>
+            <button class="btn" onclick="setData(19.8, '牛肉丸汤')">牛肉丸汤 ¥19.8</button>
+            <button class="btn" onclick="setData(39.0, '特色套餐')">特色套餐 ¥39.0</button>
+            <button class="btn" onclick="setData(82.8, '豪华外卖')">豪华外卖 ¥82.8</button>
+            <button class="btn" onclick="setData(88.0, '超级大餐')">超级大餐 ¥88.0</button>
         </div>
         <input type="number" id="custom-amount" placeholder="自定义金额" style="width:100%; padding:15px; margin-top:15px; box-sizing:border-box; border-radius:12px; border:1px solid #ddd;">
         <button class="btn btn-primary" onclick="shareOrder()">🎁 一键分享给好友代付</button>
@@ -31,27 +31,35 @@
 <div id="pay-view" style="display:none;">
     <div class="card">
         <h3>😋 好友代付请求</h3>
-        <div style="font-size: 40px; font-weight: 800; margin: 20px 0;">¥<span id="display-amount">0.00</span></div>
+        <div id="display-name" style="font-size: 18px; color: #555; margin-bottom: 10px;"></div>
+        <div style="font-size: 40px; font-weight: 800; margin-bottom: 20px;">¥<span id="display-amount">0.00</span></div>
         <button class="btn btn-primary" onclick="wakeUpAlipay()">为好友买单 (唤醒支付宝)</button>
-        <button class="btn" style="background:#eee;" onclick="location.href='/'">重新选购</button>
     </div>
 </div>
 
 <script>
-    // 你的支付宝收款码真实链接
-    const ALIPAY_QR_URL = "https://qr.alipay.com/fkx14343tq2hks1lq1v2z99";
+    // 更新后的最新收款码链接
+    const ALIPAY_QR_URL = "https://ibb.co/kT3vZYC";
+    let selectedName = "自定义点餐";
 
-    function setAmount(p) { document.getElementById('custom-amount').value = p; }
+    function setData(p, name) { 
+        document.getElementById('custom-amount').value = p; 
+        selectedName = name;
+    }
 
-    // 分享功能：生成链接并调起手机系统分享面板
+    // 分享功能
     async function shareOrder() {
         const val = document.getElementById('custom-amount').value;
-        if(!val) return alert("请先选择金额");
+        const name = selectedName;
+        if(!val) return alert("请先选择菜品或金额");
         
-        const shareUrl = window.location.origin + window.location.pathname + "?amount=" + val;
+        // 将金额和名字同时编码进链接
+        const shareUrl = window.location.origin + window.location.pathname + 
+                         "?amount=" + val + "&name=" + encodeURIComponent(name);
+        
         const shareData = {
-            title: 'Hi, 你和我的距离只差一顿外卖~',
-            text: `我点了价值 ¥${val} 的外卖，帮我买单吧！`,
+            title: '请帮我买这份外卖',
+            text: `我点了 ${name} (¥${val})，帮我买单吧！`,
             url: shareUrl
         };
 
@@ -63,20 +71,22 @@
         }
     }
 
-    // 路由：检查是否为好友点击链接进入
+    // 路由：检查参数并显示信息
     const params = new URLSearchParams(window.location.search);
     const amount = params.get('amount');
+    const name = params.get('name');
+    
     if (amount) {
         document.getElementById('order-view').style.display = 'none';
         document.getElementById('pay-view').style.display = 'block';
         document.getElementById('display-amount').innerText = amount;
+        document.getElementById('display-name').innerText = decodeURIComponent(name || "好友点餐");
     }
 
     // 唤醒支付宝
     function wakeUpAlipay() {
         const scheme = `alipays://platformapi/startapp?saId=10000007&qrcode=${encodeURIComponent(ALIPAY_QR_URL)}`;
         window.location.href = scheme;
-        // 兜底方案：如果不跳转，弹出手动打开链接
         setTimeout(() => {
             if(confirm("未自动跳转？点确定手动打开支付页面")) {
                 window.open(ALIPAY_QR_URL, '_blank');
