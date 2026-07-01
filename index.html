@@ -8,7 +8,7 @@
 <style>
 :root{ --bg:#f4f4f4; --card:#fff; --primary:#ffd100; --text:#333; --danger:#ff4d4f; }
 body{margin:0;font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--text);}
-.nav{display:flex; justify-content:space-around; padding:12px; background:#fff; position:sticky; top:0; z-index:100; border-bottom:1px solid #eee;}
+.nav{display:flex; justify-content:space-around; padding:14px; background:#fff; position:sticky; top:0; z-index:100; border-bottom:1px solid #eee; box-shadow:0 1px 4px rgba(0,0,0,0.05);}
 .nav-item{font-size:14px; color:#666; cursor:pointer;}
 .nav-item.active{color:#333; font-weight:800; border-bottom:2px solid var(--primary);}
 .tab-view{display:none; padding:15px;}
@@ -28,37 +28,16 @@ body{margin:0;font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto
   <div class="nav-item" id="nav-admin" data-tab="view-admin" style="display:none;">管理</div>
 </div>
 
-<div id="view-stores" class="tab-view active">
-  <h2>热门商家</h2>
-  <div id="store-list">加载中...</div>
-</div>
-
-<div id="view-cart" class="tab-view">
-  <h2>确认下单</h2>
-  <div id="cart-list">购物车空空如也</div>
-  <div class="card" style="margin-top:20px;">
-    <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>小计</span><b>¥<span id="cart-total">0.00</span></b></div>
-    <button class="btn-primary" onclick="checkout()">立即下单</button>
-  </div>
-</div>
-
-<div id="view-orders" class="tab-view">
-  <h2>我的订单</h2>
-  <div id="order-list">加载中...</div>
-</div>
-
-<div id="view-admin" class="tab-view">
-  <h2>管理员后台</h2>
-  <div class="card">
-    <input id="store-input" style="width:100%; padding:10px; border:1px solid #ccc;" placeholder="商家名称">
-    <button class="btn-primary" style="margin-top:10px;" onclick="addStore()">添加商家</button>
-  </div>
-</div>
+<div id="view-stores" class="tab-view active"><h2>热门商家</h2><div id="store-list">加载中...</div></div>
+<div id="view-cart" class="tab-view"><h2>确认下单</h2><div id="cart-list">购物车空空如也</div><div class="card" style="margin-top:20px;"><div>小计 ¥<span id="cart-total">0.00</span></div><button class="btn-primary" onclick="checkout()">立即下单</button></div></div>
+<div id="view-orders" class="tab-view"><h2>我的订单</h2><div id="order-list">加载中...</div></div>
+<div id="view-admin" class="tab-view"><h2>管理后台</h2><div class="card"><input id="store-input" style="width:100%; padding:10px; border:1px solid #ccc;" placeholder="商家名称"><button class="btn-primary" style="margin-top:10px;" onclick="addStore()">添加商家</button></div></div>
 
 <script>
-const SUPABASE_URL = '你的SUPABASE_URL';
-const SUPABASE_KEY = '你的SUPABASE_KEY';
-const PAY_QR_URL = 'https://ibb.co/kT3vZYC'; // 你的收款码链接
+// 使用你原本代码中的配置
+const SUPABASE_URL = 'https://dzesfxynbljtkwsbhbvq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZXNmeHluYmxqdGt3c2JoYnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTI1NjksImV4cCI6MjA5ODI2ODU2OX0.fcpHEdZUqNABHa1fZ0AJtkucwj-MYRPuSzDoQxkkLLk';
+const PAY_QR_URL = 'https://ibb.co/kT3vZYC'; 
 
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let cart = {};
@@ -79,8 +58,8 @@ async function fetchOrders() {
   list.innerHTML = data.map(o => `
     <div class="card">
       <div style="display:flex; justify-content:space-between;"><b>订单 #${o.id}</b><span class="badge-status">${o.status}</span></div>
-      <p>${o.content}</p>
-      <div style="font-size:18px; font-weight:800; color:red;">¥${o.total}</div>
+      <p style="font-size:14px; color:#666;">${o.content || ''}</p>
+      <div style="font-size:18px; font-weight:800; color:red; margin-bottom:10px;">¥${Number(o.total).toFixed(2)}</div>
       ${o.status === '待支付' ? `
         <a href="${PAY_QR_URL}" target="_blank"><button class="btn-primary">去支付</button></a>
         <button class="btn-share" onclick="sharePay('${o.id}', '${o.total}', '${o.content}')">找人代付</button>
@@ -90,12 +69,13 @@ async function fetchOrders() {
 }
 
 function sharePay(id, total, content) {
-  const text = `【美团外卖代付】订单#${id}，总价¥${total}。请长按下方链接扫码支付，订单内容：${content}。收款码：${PAY_QR_URL}`;
-  navigator.clipboard.writeText(text).then(() => alert('代付信息已复制！快发给朋友吧。'));
+  const text = `【美团外卖代付】订单#${id}，总价¥${total}。请扫码支付，订单内容：${content}。收款码：${PAY_QR_URL}`;
+  navigator.clipboard.writeText(text).then(() => alert('支付信息已复制！快发给朋友吧。'));
 }
 
-// 注意：你需要确保你的 Supabase 已按照之前步骤设置好权限，否则此代码无法调用。
-// fetchStores(); fetchProducts(); 等逻辑同之前代码结构一致，只需替换到这里即可。
+// 其余 fetchStores / addStore 等逻辑保持你原有代码逻辑不变
+// (代码已适配美团UI逻辑)
+fetchOrders();
 </script>
 </body>
 </html>
