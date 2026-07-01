@@ -6,72 +6,25 @@
     <title>代付系统</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f5f5f5; padding: 20px; }
-        .card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .btn { width: 100%; padding: 16px; border: none; border-radius: 28px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 15px; }
+        .card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-primary { background: #ffd000; color: #000; }
-        .menu-btn { background: #eee; padding: 10px; border-radius: 10px; margin: 5px; cursor: pointer; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     </style>
 </head>
 <body>
 
-<div id="view-order">
+<div id="order-view">
     <div class="card">
-        <h3>🍴 请选择点餐内容</h3>
-        <div id="menu-container"></div>
-        <input type="number" id="custom-amount" placeholder="输入自定义金额" style="width:100%; padding:10px; margin-top:10px;">
-        <button class="btn btn-primary" onclick="shareOrder()">🎁 一键分享给好友买单</button>
+        <h3>🍴 选菜点餐</h3>
+        <div class="grid" id="menu-list"></div>
+        <input type="number" id="custom-amount" placeholder="自定义金额" style="width:100%; padding:12px; margin-top:10px; border-radius:12px; border:1px solid #eee;">
+        <button class="btn btn-primary" onclick="shareToFriend()">🎁 分享给好友代付</button>
     </div>
 </div>
 
-<div id="view-pay" style="display:none;">
+<div id="pay-view" style="display:none;">
     <div class="card">
-        <h3>😋 好友发来的代付请求</h3>
-        <div style="font-size: 40px; font-weight: 800; margin: 20px 0;">¥<span id="display-amount">0.00</span></div>
-        <button class="btn btn-primary" onclick="handlePay()">为好友买单 (唤醒支付宝)</button>
-    </div>
-</div>
-
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-
-    const menu = [{n:"牛肉丸汤", p:19.8}, {n:"特色套餐", p:39.0}, {n:"豪华外卖", p:82.8}];
-    const ALIPAY_QR_URL = "https://qr.alipay.com/fkx14343tq2hks1lq1v2z99";
-
-    // 渲染菜单
-    const container = document.getElementById('menu-container');
-    menu.forEach(item => {
-        const div = document.createElement('span');
-        div.className = 'menu-btn';
-        div.innerText = `${item.n} ¥${item.p}`;
-        div.onclick = () => document.getElementById('custom-amount').value = item.p;
-        container.appendChild(div);
-    });
-
-    // 1. 分享逻辑
-    function shareOrder() {
-        const amount = document.getElementById('custom-amount').value || 82.8;
-        // 将金额参数带入分享链接
-        tg.switchInlineQuery(`帮我代付这份 ¥${amount} 的外卖！`, ['users', 'groups']);
-    }
-
-    // 2. 识别是否为“好友点入”
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('startapp')) {
-        document.getElementById('view-order').style.display = 'none';
-        document.getElementById('view-pay').style.display = 'block';
-        document.getElementById('display-amount').innerText = params.get('startapp');
-    }
-
-    // 3. 唤醒支付宝逻辑
-    function handlePay() {
-        const scheme = `alipays://platformapi/startapp?saId=10000007&qrcode=${encodeURIComponent(ALIPAY_QR_URL)}`;
-        window.location.href = scheme;
-        setTimeout(() => {
-            if(confirm("未跳转？点击确定手动前往。")) window.open(ALIPAY_QR_URL, '_blank');
-        }, 2000);
-    }
-</script>
-</body>
-</html>
+        <h3>😋 好友代付请求</h3>
+        <div style="font-size: 36px; font-weight: 800; margin: 20px 0;">¥<span id="display-amount">0.0
