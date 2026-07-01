@@ -3,80 +3,84 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>代付系统</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>代付订单系统</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 20px; }
+        body { font-family: sans-serif; background: #f5f5f5; padding: 20px; }
         .card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .btn { width: 100%; padding: 16px; border: none; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
         .btn-primary { background: #ffd000; color: #000; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     </style>
 </head>
 <body>
 
 <div id="order-view">
     <div class="card">
-        <h3>🍴 选择菜品</h3>
-        <div class="grid" id="menu-list"></div>
-        <input type="number" id="custom-amount" placeholder="输入自定义金额" style="width:100%; padding:12px; margin-top:15px; border-radius:12px; border:1px solid #ddd; box-sizing:border-box;">
-        <button class="btn btn-primary" onclick="shareToFriend()">🎁 一键分享给好友代付</button>
+        <h3>🍴 请选择菜品</h3>
+        <div class="menu-grid" id="menu-list">
+            <button class="btn" onclick="setAmount(19.8)">牛肉丸汤 ¥19.8</button>
+            <button class="btn" onclick="setAmount(39.0)">特色套餐 ¥39.0</button>
+            <button class="btn" onclick="setAmount(82.8)">豪华外卖 ¥82.8</button>
+            <button class="btn" onclick="setAmount(88.0)">超级大餐 ¥88.0</button>
+        </div>
+        <input type="number" id="custom-amount" placeholder="自定义金额" style="width:100%; padding:15px; margin-top:15px; box-sizing:border-box; border-radius:12px; border:1px solid #ddd;">
+        <button class="btn btn-primary" onclick="shareOrder()">🎁 一键分享给好友代付</button>
     </div>
 </div>
 
 <div id="pay-view" style="display:none;">
     <div class="card">
-        <h3>😋 好友发来的买单请求</h3>
+        <h3>😋 好友代付请求</h3>
         <div style="font-size: 40px; font-weight: 800; margin: 20px 0;">¥<span id="display-amount">0.00</span></div>
         <button class="btn btn-primary" onclick="wakeUpAlipay()">为好友买单 (唤醒支付宝)</button>
+        <button class="btn" style="background:#eee;" onclick="location.href='/'">重新选购</button>
     </div>
 </div>
 
 <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+    // 你的支付宝收款码真实链接
+    const ALIPAY_QR_URL = "https://qr.alipay.com/fkx14343tq2hks1lq1v2z99";
 
-    // 1. 菜品配置
-    const menu = [
-        { name: "牛肉丸汤", price: 19.8 },
-        { name: "特色炒饭", price: 25.0 },
-        { name: "豪华双人餐", price: 82.8 },
-        { name: "超级大餐", price: 88.0 }
-    ];
-    const ALIPAY_QR_URL = "https://qr.alipay.com/fkx14343tq2hks1lq1v2z99"; // 替换为你的真实链接
+    function setAmount(p) { document.getElementById('custom-amount').value = p; }
 
-    // 初始化菜单
-    const list = document.getElementById('menu-list');
-    menu.forEach(item => {
-        const b = document.createElement('button');
-        b.className = 'btn'; b.innerText = item.name;
-        b.onclick = () => document.getElementById('custom-amount').value = item.price;
-        list.appendChild(b);
-    });
-
-    // 2. 分享逻辑
-    function shareToFriend() {
+    // 分享功能：生成链接并调起手机系统分享面板
+    async function shareOrder() {
         const val = document.getElementById('custom-amount').value;
-        if(!val) return alert("请选择菜品");
-        // 分享后，链接会自动带上金额，好友点击时通过 startapp 获取
-        tg.switchInlineQuery(`帮我代付 ¥${val} 的外卖！`, ['users', 'groups']);
+        if(!val) return alert("请先选择金额");
+        
+        const shareUrl = window.location.origin + window.location.pathname + "?amount=" + val;
+        const shareData = {
+            title: 'Hi, 你和我的距离只差一顿外卖~',
+            text: `我点了价值 ¥${val} 的外卖，帮我买单吧！`,
+            url: shareUrl
+        };
+
+        if (navigator.share) {
+            await navigator.share(shareData);
+        } else {
+            navigator.clipboard.writeText(shareUrl);
+            alert("已复制链接，请直接发送给好友！");
+        }
     }
 
-    // 3. 路由判断 (根据 startapp 参数切换界面)
+    // 路由：检查是否为好友点击链接进入
     const params = new URLSearchParams(window.location.search);
-    if (params.get('startapp')) {
+    const amount = params.get('amount');
+    if (amount) {
         document.getElementById('order-view').style.display = 'none';
         document.getElementById('pay-view').style.display = 'block';
-        document.getElementById('display-amount').innerText = params.get('startapp');
+        document.getElementById('display-amount').innerText = amount;
     }
 
-    // 4. 强制唤醒支付宝
+    // 唤醒支付宝
     function wakeUpAlipay() {
         const scheme = `alipays://platformapi/startapp?saId=10000007&qrcode=${encodeURIComponent(ALIPAY_QR_URL)}`;
         window.location.href = scheme;
-        // 兜底方案
+        // 兜底方案：如果不跳转，弹出手动打开链接
         setTimeout(() => {
-            if(confirm("未跳转？点击确定手动前往。")) window.open(ALIPAY_QR_URL, '_blank');
+            if(confirm("未自动跳转？点确定手动打开支付页面")) {
+                window.open(ALIPAY_QR_URL, '_blank');
+            }
         }, 2000);
     }
 </script>
