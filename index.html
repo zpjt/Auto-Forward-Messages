@@ -31,7 +31,7 @@
     </div>
 
     <div id="view-stores" class="tab-view active"><div id="stores-header"><h2>商家列表</h2></div><div id="store-list">加载中...</div></div>
-    <div id="view-cart" class="tab-view"><h2>购物车</h2><div id="cart-list"></div><button class="btn p" onclick="checkout()">提交订单</button></div>
+    <div id="view-cart" class="tab-view"><h2>购物车</h2><div id="cart-list"></div><p>总计: ¥<span id="cart-total">0</span></p><button class="btn p" onclick="checkout()">提交订单</button></div>
     <div id="view-orders" class="tab-view"><h2>我的订单</h2><div id="order-list"></div></div>
     <div id="view-admin" class="tab-view"><h2>管理后台</h2><div class="card"><h3>新建商家</h3><input id="store-input" placeholder="名称" /><button class="btn p" onclick="addStore()">添加</button></div><div class="card"><h3>上架商品</h3><select id="admin-store-select"><option value="">选商家...</option></select><input id="product-name-input" placeholder="名称" /><input id="product-price-input" type="number" placeholder="价格" /><button class="btn p" onclick="addProduct()">添加</button></div></div>
     <div id="view-auth" class="tab-view">
@@ -84,52 +84,20 @@
         }
 
         async function checkout() {
-    // 这是你的后端服务器地址
-    const BACKEND_URL = 'https://auto-forward-messages-production.up.railway.app';
-    
-    // 检查购物车是否为空
-    if (Object.keys(cart).length === 0) {
-        alert('购物车是空的！');
-        return;
-    }
-
-    const total = Object.values(cart).reduce((s, i) => s + i.price * i.count, 0);
-    
-    try {
-        const res = await fetch(`${BACKEND_URL}/api/orders`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify({
-                content: JSON.stringify(cart),
-                total: total
-            })
-        });
-        
-        const data = await res.json();
-
-        if (res.ok) {
-            alert('订单提交成功！');
-            // 可选：提交成功后清空购物车
-            cart = {};
-            renderCart();
-        } else {
-            alert('提交失败: ' + (data.error || '未知错误'));
-        }
-    } catch (e) {
-        console.error('连接错误:', e);
-        alert('无法连接到服务器，请检查网络或后端是否运行正常。');
-    }
-}
-
-    }
-}
-
-            if(!currentUser) return alert('请登录');
-            const total = Object.values(cart).reduce((s,i) => s+i.price*i.count, 0);
-            const {error} = await client.from('orders').insert([{content: JSON.stringify(cart), total, status:'待支付'}]);
-            if(!error) { alert('提交成功'); cart={}; updateCartUI(); document.querySelector('[data-tab="view-orders"]').click(); }
+            const BACKEND_URL = 'https://auto-forward-messages-production.up.railway.app';
+            if (Object.keys(cart).length === 0) return alert('购物车是空的！');
+            if (!currentUser) return alert('请先登录！');
+            
+            const total = Object.values(cart).reduce((s, i) => s + i.price * i.count, 0);
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: JSON.stringify(cart), total: total })
+                });
+                if (res.ok) { alert('订单提交成功！'); cart = {}; updateCartUI(); document.querySelector('[data-tab="view-orders"]').click(); }
+                else { alert('提交失败'); }
+            } catch (e) { alert('连接服务器失败'); }
         }
 
         async function handleAuth(type) {
