@@ -84,32 +84,45 @@
         }
 
         async function checkout() {
-    // 你的真实后端地址
+    // 这是你的后端服务器地址
     const BACKEND_URL = 'https://auto-forward-messages-production.up.railway.app';
     
-    // 1. 获取购物车数据（假设你的购物车变量叫 cart）
+    // 检查购物车是否为空
+    if (Object.keys(cart).length === 0) {
+        alert('购物车是空的！');
+        return;
+    }
+
     const total = Object.values(cart).reduce((s, i) => s + i.price * i.count, 0);
     
-    // 2. 发送请求给你的 Railway 后端
     try {
         const res = await fetch(`${BACKEND_URL}/api/orders`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json' 
+            },
             body: JSON.stringify({
                 content: JSON.stringify(cart),
                 total: total
             })
         });
         
+        const data = await res.json();
+
         if (res.ok) {
             alert('订单提交成功！');
+            // 可选：提交成功后清空购物车
+            cart = {};
+            renderCart();
         } else {
-            const err = await res.json();
-            alert('提交失败: ' + err.error);
+            alert('提交失败: ' + (data.error || '未知错误'));
         }
     } catch (e) {
-        alert('连接后端失败，请检查 Railway 状态或网络');
-        console.error(e);
+        console.error('连接错误:', e);
+        alert('无法连接到服务器，请检查网络或后端是否运行正常。');
+    }
+}
+
     }
 }
 
