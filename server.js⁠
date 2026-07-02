@@ -50,5 +50,5 @@ app.post('/api/pay/notify', async (req, res) => {
   res.status(400).json({ error: 'failed' });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// 核心修改：删除了 app.listen(PORT...)，改用 module.exports 导出给 Vercel 接管
+module.exports = app;
