@@ -6,61 +6,54 @@
     <title>外卖点餐系统 Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root{--bg:#f5f5f5;--card:#ffffff;--text:#111111;--muted:#8a8a8a;--primary:#ffd000;--primary-dark:#ffbf00;--danger:#ff4d4f;--success:#00b578;--border:#ececec;--shadow:0 8px 24px rgba(0,0,0,.06);}
+        :root{--bg:#f5f5f5;--card:#ffffff;--text:#111111;--primary:#ffd000;--primary-dark:#ffbf00;--danger:#ff4d4f;--success:#00b578;--border:#ececec;--shadow:0 8px 24px rgba(0,0,0,.06);}
         *{box-sizing:border-box}
-        body{margin:0;font-family:Arial, "PingFang SC","Microsoft YaHei", sans-serif;background:var(--bg);color:var(--text)}
-        .nav{display:flex; gap:10px;padding: 14px 12px; background:linear-gradient(135deg, #111,#2b2b2b); position:sticky;top:0;z-index:10;overflow:auto}
-        .nav-item{padding: 10px 14px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,.08);color:#fff;font-weight:700;white-space:nowrap;}
+        body{margin:0;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+        .nav{display:flex;gap:10px;padding:14px 12px;background:linear-gradient(135deg,#111,#2b2b2b);position:sticky;top:0;z-index:10;overflow:auto}
+        .nav-item{padding:10px 14px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,.08);color:#fff;font-weight:700;white-space:nowrap;}
         .nav-item.active{background:var(--primary);color:#111}
-        .tab-view{display:none;padding:14px;max-width: 1100px;margin:0 auto}
+        .tab-view{display:none;padding:14px;max-width:1100px;margin:0 auto}
         .tab-view.active{display:block}
-        .card{background: var(--card); border:1px solid var(--border); border-radius:18px;padding:14px; margin-bottom: 12px; box-shadow:var(--shadow)}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
         .btn{padding:10px 14px;border:0;border-radius:14px;cursor:pointer;font-weight:700}
-        .p{background: linear-gradient(135deg, var(--primary), var(--primary-dark));color:#111}
+        .p{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#111}
         .badge{padding:4px 8px;border-radius:6px;font-size:12px;font-weight:bold;}
-        .badge.wait{background:#fff3bf;color:#8a5b00;}
         .badge.success{background:#d4edda;color:#155724;}
     </style>
 </head>
 <body>
     <div class="nav">
-        <div class="nav-item active" data-tab="view-stores">商家</div>
-        <div class="nav-item" data-tab="view-cart">购物车</div>
-        <div class="nav-item" data-tab="view-orders">订单</div>
-        <div class="nav-item" id="nav-admin" data-tab="view-admin" style="display:none;">管理</div>
-        <div class="nav-item" data-tab="view-auth" id="nav-auth-btn" style="margin-left:auto; background:rgba(255,255,255,0.2);">登录/注册</div>
+        <div class="nav-item active" data-tab="view-stores">🏪 商家</div>
+        <div class="nav-item" data-tab="view-cart">🛒 购物车</div>
+        <div class="nav-item" data-tab="view-orders">📋 订单</div>
+        <div class="nav-item" id="nav-admin" data-tab="view-admin" style="display:none;">⚙️ 管理</div>
+        <div class="nav-item" data-tab="view-auth" id="nav-auth-btn" style="margin-left:auto; background:rgba(255,255,255,0.2);">🔐 账户</div>
     </div>
 
-    <div id="view-stores" class="tab-view active"><div id="store-list">加载中...</div></div>
+    <div id="view-stores" class="tab-view active"><div id="stores-header"><h2>商家列表</h2></div><div id="store-list">加载中...</div></div>
     <div id="view-cart" class="tab-view"><h2>购物车</h2><div id="cart-list"></div><button class="btn p" onclick="checkout()">提交订单</button></div>
     <div id="view-orders" class="tab-view"><h2>我的订单</h2><div id="order-list"></div></div>
-    <div id="view-admin" class="tab-view"><h2>管理后台</h2><div id="admin-content"></div></div>
-    <div id="view-auth" class="tab-view"><h2>账户中心</h2><div id="auth-content"></div></div>
+    <div id="view-admin" class="tab-view"><h2>管理后台</h2><div class="card"><h3>新建商家</h3><input id="store-input" placeholder="名称" /><button class="btn p" onclick="addStore()">添加</button></div><div class="card"><h3>上架商品</h3><select id="admin-store-select"><option value="">选商家...</option></select><input id="product-name-input" placeholder="名称" /><input id="product-price-input" type="number" placeholder="价格" /><button class="btn p" onclick="addProduct()">添加</button></div></div>
+    <div id="view-auth" class="tab-view">
+        <h2>账户中心</h2>
+        <div id="auth-logged-out"><input id="auth-email" placeholder="邮箱" /><input id="auth-password" type="password" placeholder="密码" /><button class="btn p" onclick="handleAuth('signin')">登录</button><button class="btn" onclick="handleAuth('signup')">注册</button></div>
+        <div id="auth-logged-in" style="display:none;"><p>已登录: <span id="user-display"></span></p><button class="btn" onclick="handleSignOut()">退出</button></div>
+    </div>
 
     <script>
         const SUPABASE_URL = 'https://dzesfxynbljtkwsbhbvq.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZXNmeHluYmxqdGt3c2JoYnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTI1NjksImV4cCI6MjA5ODI2ODU2OX0.fcpHEdZUqNABHa1fZ0AJtkucwj-MYRPuSzDoQxkkLLk';
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const esc = t => String(t?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+        let cart = {}, currentUser = null;
+        const esc = t => String(t ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
 
-        // 订单页渲染逻辑 (修复跳转)
         async function fetchOrders() {
             const { data } = await client.from('orders').select('*').order('id', { ascending: false });
-            if (!data || data.length === 0) { document.getElementById('order-list').innerHTML = '暂无订单'; return; }
-            document.getElementById('order-list').innerHTML = data.map(o => {
-                const isPaid = o.status === '已支付';
-                return `<div class="card">
-                    <div>订单#${o.id} - ${esc(o.content)}</div>
-                    <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
-                        <b>¥${Number(o.total).toFixed(2)}</b>
-                        ${isPaid ? '<span class="badge success">已支付</span>' : 
-                          `<a href="pay.html?amount=${o.total}&orderId=${o.id}" style="text-decoration:none;"><button class="btn p">去代付</button></a>`}
-                    </div>
-                </div>`;
-            }).join('');
+            document.getElementById('order-list').innerHTML = (data||[]).map(o => `
+                <div class="card"><div>订单#${o.id} - ${o.content}</div><div style="display:flex; justify-content:space-between; margin-top:10px;"><b>¥${o.total}</b>${o.status==='已支付'?'<span class="badge success">已支付</span>':`<a href="pay.html?amount=${o.total}&orderId=${o.id}"><button class="btn p">去代付</button></a>`}</div></div>
+            `).join('') || '暂无订单';
         }
 
-        // 导航切换
         document.querySelectorAll('.nav-item').forEach(item => {
             item.onclick = () => {
                 document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
@@ -68,16 +61,56 @@
                 item.classList.add('active');
                 document.getElementById(item.dataset.tab).style.display = 'block';
                 if(item.dataset.tab === 'view-orders') fetchOrders();
+                if(item.dataset.tab === 'view-admin') prepareAdminForm();
             };
         });
 
-        // 基础初始化
-        async function init() {
-            // 这里确保你原系统中所有的初始化函数都被调用
-            if(typeof fetchStores === 'function') fetchStores();
-            // 添加其他必要的初始化函数...
+        async function fetchStores() {
+            const { data } = await client.from('stores').select('*');
+            document.getElementById('store-list').innerHTML = (data||[]).map(s => `<div class="card" onclick="fetchProducts(${s.id}, '${esc(s.name)}')"><b>${esc(s.name)}</b></div>`).join('') || '暂无商家';
         }
-        init();
+
+        async function fetchProducts(sid, sname) {
+            document.getElementById('stores-header').innerHTML = `<button class="btn" onclick="fetchStores()">返回</button> <h2>${sname}</h2>`;
+            const { data } = await client.from('products').select('*').eq('store_id', sid);
+            document.getElementById('store-list').innerHTML = (data||[]).map(p => `<div class="card">${esc(p.name)} - ¥${p.price}<button class="btn p" onclick="addToCart(${p.id}, '${esc(p.name)}', ${p.price})">加入</button></div>`).join('');
+        }
+
+        function addToCart(id, name, price) { cart[id] = cart[id] ? {...cart[id], count: cart[id].count+1} : {name, price, count:1}; alert('已添加'); updateCartUI(); }
+        function updateCartUI() {
+            let total = 0;
+            document.getElementById('cart-list').innerHTML = Object.values(cart).map(i => { total+=i.price*i.count; return `<div>${i.name} x${i.count}</div>`; }).join('') || '空';
+            document.getElementById('cart-total').innerText = total;
+        }
+
+        async function checkout() {
+            if(!currentUser) return alert('请登录');
+            const total = Object.values(cart).reduce((s,i) => s+i.price*i.count, 0);
+            const {error} = await client.from('orders').insert([{content: JSON.stringify(cart), total, status:'待支付'}]);
+            if(!error) { alert('提交成功'); cart={}; updateCartUI(); document.querySelector('[data-tab="view-orders"]').click(); }
+        }
+
+        async function handleAuth(type) {
+            const {error} = type==='signup' ? await client.auth.signUp({email:document.getElementById('auth-email').value, password:document.getElementById('auth-password').value}) : await client.auth.signInWithPassword({email:document.getElementById('auth-email').value, password:document.getElementById('auth-password').value});
+            alert(error ? error.message : '成功');
+        }
+
+        async function prepareAdminForm() {
+            const {data} = await client.from('stores').select('*');
+            document.getElementById('admin-store-select').innerHTML = (data||[]).map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        }
+
+        async function addStore() { const {error} = await client.from('stores').insert([{name:document.getElementById('store-input').value}]); alert(error?error.message:'成功'); }
+        async function addProduct() { const {error} = await client.from('products').insert([{store_id:document.getElementById('admin-store-select').value, name:document.getElementById('product-name-input').value, price:document.getElementById('product-price-input').value}]); alert(error?error.message:'成功'); }
+
+        client.auth.onAuthStateChange((e, s) => {
+            currentUser = s?.user || null;
+            document.getElementById('nav-admin').style.display = (currentUser?.email === 'admin@qq.com') ? 'block' : 'none';
+            document.getElementById('auth-logged-out').style.display = currentUser ? 'none' : 'block';
+            document.getElementById('auth-logged-in').style.display = currentUser ? 'block' : 'none';
+            if(currentUser) document.getElementById('user-display').innerText = currentUser.email;
+        });
+        fetchStores();
     </script>
 </body>
 </html>
