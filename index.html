@@ -84,6 +84,35 @@
         }
 
         async function checkout() {
+    // 你的真实后端地址
+    const BACKEND_URL = 'https://auto-forward-messages-production.up.railway.app';
+    
+    // 1. 获取购物车数据（假设你的购物车变量叫 cart）
+    const total = Object.values(cart).reduce((s, i) => s + i.price * i.count, 0);
+    
+    // 2. 发送请求给你的 Railway 后端
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/orders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                content: JSON.stringify(cart),
+                total: total
+            })
+        });
+        
+        if (res.ok) {
+            alert('订单提交成功！');
+        } else {
+            const err = await res.json();
+            alert('提交失败: ' + err.error);
+        }
+    } catch (e) {
+        alert('连接后端失败，请检查 Railway 状态或网络');
+        console.error(e);
+    }
+}
+
             if(!currentUser) return alert('请登录');
             const total = Object.values(cart).reduce((s,i) => s+i.price*i.count, 0);
             const {error} = await client.from('orders').insert([{content: JSON.stringify(cart), total, status:'待支付'}]);
