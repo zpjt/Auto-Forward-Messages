@@ -1,0 +1,40 @@
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const { createClient } = require('@supabase/supabase-js');
+
+dotenv.config();
+const app = express();
+app.use(cors()); 
+app.use(express.json());
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+app.get('/api/orders/:id', async (req, res) => {
+  const { data, error } = await supabase.from('orders').select('*').eq('id', req.params.id).single();
+  if (error) return res.status(400).json({ error: error.message });
+  res.json(data);
+});
+
+app.post('/api/orders', async (req, res) => {
+  const { content, total } = req.body;
+  const { data, error } = await supabase.from('orders').insert([{ content, total, status: '待支付' }]).select();
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ success: true, data });
+});
+
+app.post('/api/pay/notify', async (req, res) => {
+  const { order_id, trade_status } = req.body;
+  if (trade_status === 'SUCCESS') {
+    await supabase.from('orders').update({ status: '已支付' }).eq('id', order_id);
+    return res.json({ ok: true });
+  }
+  res.status(400).json({ error: 'failed' });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+ 
