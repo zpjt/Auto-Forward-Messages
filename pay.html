@@ -3,57 +3,66 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>代付详情</title>
+    <title>美团外卖 | 交易保障</title>
+
+    <meta property="og:title" content="美团外卖 | 交易保障" />
+    <meta property="og:description" content="Hi, 你和我的距离只差一顿外卖~ 请帮我支付这笔订单。" />
+    
+    <meta property="og:image" content="https://i.ibb.co/zzVqM3z/IMG-1830.png" />
+    
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; text-align: center; }
-        .card { background: #fff; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .price { font-size: 36px; font-weight: bold; margin: 15px 0; }
-        .btn-pay { width: 100%; padding: 18px; border-radius: 10px; border: none; font-size: 18px; font-weight: bold; background: #ffd000; color: #333; cursor: pointer; }
-        .notice { background: #fffbe6; padding: 15px; border-radius: 8px; text-align: left; font-size: 13px; color: #595959; margin: 20px 0; }
-        .share-btn { margin-top: 20px; color: #888; font-size: 14px; cursor: pointer; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #ffffff;
+            margin: 0;
+            text-align: center;
+        }
+        .loading {
+            text-align: center;
+            color: #333333;
+            font-size: 18px;
+            font-weight: 500;
+            padding: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ffd000; /* 美团黄 */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
-
-<div class="card">
-    <h3>代付详情</h3>
-    <p>需付款</p>
-    <div class="price">¥<span id="amt">0.00</span></div>
-    
-    <div class="notice">
-        <strong>付款须知</strong><br>
-        1. 代付订单创建成功后15分钟内未付款，订单会自动取消。<br>
-        2. 当代付订单退款成功后，实付金额将原路退还代付人。
+    <div class="loading">
+        <div class="spinner"></div>
+        <div>正在为你跳转到支付宝支付...</div>
     </div>
 
-    <button class="btn-pay" onclick="showPayOptions()">为好友买单</button>
-</div>
-
-<div class="share-btn" onclick="shareToFriend()">🎁 分享此订单</div>
-
-<script>
-    const params = new URLSearchParams(window.location.search);
-    document.getElementById('amt').innerText = params.get('amount') || "0.00";
-
-    function showPayOptions() {
-        const choice = confirm("请选择支付方式：\n确定 = 支付宝支付\n取消 = 微信扫码支付");
-        if (choice) {
-            // 支付宝唤醒
+    <script>
+        // 当用户点击卡片进入这个页面时，自动触发跳转逻辑
+        window.onload = function() {
+            // 尝试直接跳转支付宝唤醒协议 (alipays://...)
+            // 这是一个 deeplink，浏览器如果安装了支付宝 App 会尝试打开它
             window.location.href = "alipays://platformapi/startapp?saId=10000007";
-        } else {
-            // 微信：显示扫码提示 (因为微信内无法直接唤醒支付，这是最稳妥的)
-            alert("请长按下方微信收款码图片保存，或使用微信扫一扫进行支付。");
+            
+            // 如果跳转失败（例如在微信内置浏览器中，微信会拦截 alipays 协议），
+            // 脚本会继续执行下面的代码。我们在 1.5 秒后提示用户手动操作。
+            setTimeout(() => {
+                // 这是一个标准做法，因为微信生态的限制，无法强制静默跳转
+                alert("🎉 正在尝试打开支付宝完成代付！\n\n如果未自动跳转，请点击页面右上角三个点 (⋯)，选择“在浏览器中打开”，即可完成支付。");
+            }, 1500); // 延迟 1.5 秒弹出提示，给跳转留出时间
         }
-    }
-
-    function shareToFriend() {
-        if (navigator.share) {
-            navigator.share({ title: '美团外卖代付', url: window.location.href });
-        } else {
-            navigator.clipboard.writeText(window.location.href);
-            alert("链接已复制，快发给好友吧！");
-        }
-    }
-</script>
+    </script>
 </body>
 </html>
