@@ -13,10 +13,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// 获取订单（已修复表名并增加 parseInt 转换）
+// 获取订单
 app.get('/api/orders/:id', async (req, res) => {
   const { data, error } = await supabase
-    .from('订单')
+    .from('orders') // 已修改为 orders
     .select('*')
     .eq('id', parseInt(req.params.id))
     .single();
@@ -25,11 +25,11 @@ app.get('/api/orders/:id', async (req, res) => {
   res.json(data);
 });
 
-// 创建订单（已修复表名）
+// 创建订单
 app.post('/api/orders', async (req, res) => {
   const { content, total } = req.body;
   const { data, error } = await supabase
-    .from('订单')
+    .from('orders') // 已修改为 orders
     .insert([{ content, total, status: '待支付' }])
     .select();
     
@@ -37,12 +37,12 @@ app.post('/api/orders', async (req, res) => {
   res.json({ success: true, data });
 });
 
-// 支付通知（已修复表名）
+// 支付通知
 app.post('/api/pay/notify', async (req, res) => {
   const { order_id, trade_status } = req.body;
   if (trade_status === 'SUCCESS') {
     await supabase
-      .from('订单')
+      .from('orders') // 已修改为 orders
       .update({ status: '已支付' })
       .eq('id', parseInt(order_id));
       
