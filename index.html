@@ -1,112 +1,99 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>外卖点餐系统 Pro</title>
-    
-    <meta property="og:title" content="来帮我代付吧～" />
-    <meta property="og:description" content="Hi, 我与你的距离只差一顿外卖～" />
-    <meta property="og:image" content="https://i.ibb.co/n9FPGnj/IMG-1830.png" />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root{--bg:#f5f5f5;--card:#ffffff;--text:#111111;--primary:#ffd000;--primary-dark:#ffbf00;--danger:#ff4d4f;--success:#00b578;--border:#ececec;--shadow:0 8px 24px rgba(0,0,0,.06);}
-        *{box-sizing:border-box}
-        body{margin:0;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
-        .nav{display:flex;gap:10px;padding:14px 12px;background:linear-gradient(135deg,#111,#2b2b2b);position:sticky;top:0;z-index:10;overflow:auto}
-        .nav-item{padding:10px 14px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,.08);color:#fff;font-weight:700;white-space:nowrap;}
-        .nav-item.active{background:var(--primary);color:#111}
-        .tab-view{display:none;padding:14px;max-width:1100px;margin:0 auto}
-        .tab-view.active{display:block}
-        .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
-        .btn{padding:10px 14px;border:0;border-radius:14px;cursor:pointer;font-weight:700}
-        .p{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#111}
-        .badge{padding:4px 8px;border-radius:6px;font-size:12px;font-weight:bold;}
-        .badge.success{background:#d4edda;color:#155724;}
-
-        /* --- 完美复刻图片模样的代付分享卡片样式 --- */
-        .share-card-container {
-            background: #1a1a1a;
-            min-height: 100vh;
-            padding: 40px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .share-card-top-bar {
-            width: 100%;
-            max-width: 360px;
-            display: flex;
-            justify-content: space-between;
-            color: #888;
-            font-size: 13px;
-            margin-bottom: 20px;
-        }
-        .share-card-msg {
-            color: #ffffff;
-            font-size: 22px;
-            font-weight: bold;
-            width: 100%;
-            max-width: 360px;
-            margin-bottom: 25px;
-            line-height: 1.4;
-        }
-        .image-template-box {
-            background: #ffd101;
-            width: 100%;
-            max-width: 360px;
-            border-radius: 16px;
-            padding: 30px 24px;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        .image-template-box .card-title {
-            font-size: 24px;
-            font-weight: 900;
-            color: #111111;
-            margin-bottom: 75px;
-        }
-        .image-template-box .card-avatar-placeholder {
-            position: absolute;
-            right: 24px;
-            top: 25px;
-            width: 90px;
-            height: 90px;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="40" r="25" fill="%234a3300"/><circle cx="50" cy="38" r="22" fill="%23fcd0a1"/><rect x="32" y="65" width="36" height="35" rx="10" fill="%233b82f6"/><circle cx="50" cy="55" r="12" fill="%23ff4d4f"/></svg>') no-repeat center/contain;
-        }
-        .image-template-inner {
-            background: #ffffff;
-            border-radius: 14px;
-            padding: 40px 20px;
-            text-align: center;
-        }
-        .image-template-inner .timer-label {
-            color: #666666;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-        .image-template-inner .timer-val {
-            font-size: 46px;
-            font-weight: 800;
-            color: #111111;
-            margin-bottom: 25px;
-            letter-spacing: 1px;
-        }
-        .image-template-inner .details-btn {
-            color: #8c6823;
-            font-weight: bold;
-            font-size: 18px;
-            text-decoration: none;
-            display: inline-block;
-            padding: 5px 20px;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>购物车系统</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#f5f5f5;
+  --card:#fff;
+  --text:#111;
+  --muted:#8a8a8a;
+  --primary:#ffd000;
+  --primary-dark:#ffbf00;
+  --danger:#ff4d4f;
+  --success:#00b578;
+  --border:#ececec;
+  --shadow:0 8px 24px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.nav{display:flex;gap:10px;padding:14px 12px;background:linear-gradient(135deg,#111,#2b2b2b);position:sticky;top:0;z-index:10;overflow:auto}
+.nav-item{padding:10px 14px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,.08);color:#fff;font-weight:700;white-space:nowrap}
+.nav-item.active{background:var(--primary);color:#111}
+.tab-view{display:none;padding:14px;max-width:1100px;margin:0 auto}
+.tab-view.active{display:block}
+h2{margin:8px 0 14px;font-size:22px;font-weight:800}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input,select{padding:12px 14px;border:1px solid #ddd;border-radius:14px;background:#fff;outline:none}
+input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,0,.18)}
+.btn{padding:10px 14px;border:0;border-radius:14px;cursor:pointer;font-weight:700}
+.btn:hover{opacity:.95}
+.p{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#111}
+.w{background:#fff3bf;color:#8a5b00;border:1px solid #ffe08a}
+.d{background:linear-gradient(135deg,#ff7875,#ff4d4f);color:#fff}
+.g{background:linear-gradient(135deg,#4cd964,#00b578);color:#fff}
+.muted{color:var(--muted)}
+#order-detail{background:linear-gradient(180deg,#fff,#fffdf2);border:1px solid #ffe58f}
+.card b{font-size:16px}
+.card .muted{font-size:13px}
+@media (max-width:640px){
+  .tab-view{padding:12px}
+  h2{font-size:20px}
+  .card{padding:12px;border-radius:16px}
+  .row{gap:8px}
+  input{width:100%}
+  .btn{width:100%}
+}
+</style>
 </head>
 <body>
-    <div class="nav">
-        <div class="nav-item active" data-tab="view-stores">🏪 商家</div>
-        <div class="nav-item" data-tab="view-cart">🛒 购物车</div>
-        <div class="nav-item" data-tab="view-orders">📋 订单</div>
-        <div class="nav-item" id="nav-admin" data-tab="view-admin" style="display:none;">⚙️ 管理
+<div class="nav">
+  <div class="nav-item active" data-tab="view-stores">🏪 商家</div>
+  <div class="nav-item" data-tab="view-cart">🛒 购物车</div>
+  <div class="nav-item" data-tab="view-orders">📋 订单</div>
+  <div class="nav-item" data-tab="view-admin">⚙️ 管理</div>
+</div>
+
+<div id="view-stores" class="tab-view active">
+  <h2>商家列表</h2>
+  <div id="store-list" class="muted">加载中...</div>
+</div>
+
+<div id="view-cart" class="tab-view">
+  <h2>购物车</h2>
+  <div class="card">
+    共 <b id="cart-count">0</b> 件，合计 ¥<b id="cart-total">0.00</b>
+    <button class="btn p" onclick="checkout()">提交订单</button>
+  </div>
+  <div id="cart-list" class="muted">购物车为空</div>
+</div>
+
+<div id="view-orders" class="tab-view">
+  <h2>订单</h2>
+  <div id="order-detail" class="card muted">点击“查看详情”查看订单明细</div>
+  <div id="order-list" class="muted">暂无订单</div>
+</div>
+
+<div id="view-admin" class="tab-view">
+  <h2>管理</h2>
+  <div class="card row">
+    <input id="store-input" placeholder="输入商家名称" />
+    <button class="btn w" onclick="addStore()">添加商家</button>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://dzesfxynbljtkwsbhbvq.supabase.co';
+const SUPABASE_KEY='sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ';
+const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let cart={};
+let ordersCache=[];
+let ordersPoller=null;
+
+const esc=t=>String(t??'').replace(/[&<>"']/g,m=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'
