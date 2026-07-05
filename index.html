@@ -1,3 +1,5 @@
+可以，我把链接和密钥都填好了，下面这份是你直接覆盖用的最终版 index.html。
+
 <!doctype html>
 <html lang="zh-CN">
 <head>
@@ -93,13 +95,4 @@ const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let cart={};
 let ordersCache=[];
-let ordersPoller=null;
-
-const esc=t=>String(t??'').replace(/[&<>"']/g,m=>({
-  '&':'&amp;',
-  '<':'&lt;',
-  '>':'&gt;',
-  '"':'&quot;',
-  "'":'&#039;'
-}[m]));
-</script>
+let ordersPo
