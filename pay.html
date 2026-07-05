@@ -10,6 +10,8 @@
   <meta property="og:image" content="https://i.ibb.co/n9FPGnj/IMG-1830.png" />
   <meta property="og:type" content="website" />
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     :root{
       --bg:#f5f5f5;
@@ -110,14 +112,6 @@
       margin:0 auto 10px;
     }
     @keyframes spin{to{transform:rotate(360deg)}}
-    .error{
-      color:#c00;
-      background:#fff0f0;
-      border:1px solid #ffd6d6;
-      padding:12px;
-      border-radius:14px;
-      margin-top:12px;
-    }
     .hint{
       margin-top:10px;
       text-align:center;
@@ -151,16 +145,15 @@
         <div class="title">订单信息</div>
         <div class="row">
           <div>
-            <div><b id="storeName">商家</b></div>
-            <div class="muted">订单号：<span id="orderId">加载中...</span></div>
+            <div><b id="storeName">购物车订单</b></div>
+            <div class="muted">订单号：#<span id="orderId">加载中...</span></div>
           </div>
         </div>
       </div>
 
       <div class="card">
         <div class="title">商品明细</div>
-        <div id="itemList" class="box">
-          </div>
+        <div id="itemList" class="box"></div>
         <div class="total">
           <span>合计需代付</span>
           <span style="color:#ff4d4f;">¥<span id="orderTotal">0.00</span></span>
@@ -174,25 +167,50 @@
   </div>
 
   <script>
-    // 补全基础逻辑让界面能正确展示
-    document.addEventListener('DOMContentLoaded', () => {
-      // 模拟 1 秒后加载完毕
-      setTimeout(() => {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('orderBox').style.display = 'block';
+    // 配置 Supabase
+    const client = supabase.createClient(
+      'https://dzesfxynbljtkwsbhbvq.supabase.co', 
+      'sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ'
+    );
 
-        // 填入模拟数据
-        document.getElementById('storeName').innerText = '正宗麻辣烫';
-        document.getElementById('orderId').innerText = 'MT893247923487';
-        document.getElementById('orderTotal').innerText = '28.50';
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. 获取 URL 参数中的 order_id
+      const params = new URLSearchParams(window.location.search);
+      const orderId = params.get('order_id');
 
-        document.getElementById('itemList').innerHTML = `
-          <div class="item">
-            <span class="name">麻辣烫自选套餐</span>
-            <span class="right">x1<br><span class="muted">¥28.50</span></span>
-          </div>
-        `;
-      }, 1000);
+      if (!orderId) {
+        document.getElementById('loading').innerHTML = '未找到订单号，请返回下单';
+        return;
+      }
+
+      // 2. 从 Supabase 读取对应订单数据
+      const { data, error } = await client.from('orders').select('*').eq('id', orderId).single();
+
+      if (error || !data) {
+        document.getElementById('loading').innerHTML = '订单加载失败';
+        return;
+      }
+
+      // 3. 渲染页面
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('orderBox').style.display = 'block';
+      document.getElementById('orderId').innerText = data.id;
+
+      try {
+        const items = JSON.parse(data.content);
+        let html = '', total = 0;
+        for (let id in items) {
+          html += `<div class="item">
+                     <span class="name">${items[id].name}</span>
+                     <span class="right">x${items[id].count}<br><span class="muted">¥${items[id].price}</span></span>
+                   </div>`;
+          total += items[id].price * items[id].count;
+        }
+        document.getElementById('itemList').innerHTML = html;
+        document.getElementById('orderTotal').innerText = total.toFixed(2);
+      } catch (e) {
+        document.getElementById('itemList').innerHTML = '订单内容解析失败';
+      }
     });
 
     function handlePay() {
@@ -200,7 +218,9 @@
     }
 
     function copyLink() {
-      alert('代付链接已复制！');
+      // 复制当前的完整链接，好友点开就是这张卡片
+      navigator.clipboard.writeText(window.location.href);
+      alert('代付链接已复制，快发给好友吧！');
     }
   </script>
 </body>
