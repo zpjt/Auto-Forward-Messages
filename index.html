@@ -149,6 +149,41 @@ function addStore() {
 
 function checkout() {
   alert('正在提交订单...');
+}const ADMIN_KEY = 'jb_admin_ok';
+const ADMIN_PASSWORD = '123456';
+
+function isAdminLoggedIn(){
+  return localStorage.getItem(ADMIN_KEY) === '1';
+}
+
+function renderAdminPanel(){
+  const auth = document.getElementById('admin-auth');
+  const panel = document.getElementById('admin-panel');
+  if (!auth || !panel) return;
+
+  if (isAdminLoggedIn()) {
+    auth.style.display = 'none';
+    panel.style.display = 'block';
+  } else {
+    auth.style.display = 'block';
+    panel.style.display = 'none';
+  }
+}
+
+function adminLogin(){
+  const pw = document.getElementById('admin-pass').value.trim();
+  if (pw !== ADMIN_PASSWORD) {
+    alert('管理员密码错误');
+    return;
+  }
+  localStorage.setItem(ADMIN_KEY, '1');
+  renderAdminPanel();
+  alert('管理员登录成功');
+}
+
+function adminLogout(){
+  localStorage.removeItem(ADMIN_KEY);
+  renderAdminPanel();
 }
 </script>
 </body>
