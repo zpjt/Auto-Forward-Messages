@@ -13,10 +13,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// === 新增：卡片分享路由 (用于社交 App 抓取卡片) ===
+// === 分享中转路由：社交 App 抓取卡片专用 ===
 app.get('/share', async (req, res) => {
   const orderId = req.query.order_id;
-  // 这是你提供的前端地址
+  // 指向你的 GitHub Pages 前端支付页面
   const payDetailUrl = 'https://lsscqc520-ship-it.github.io/Auto-Forward-Messages/pay.html?order_id=' + orderId;
 
   res.send(`
@@ -30,7 +30,7 @@ app.get('/share', async (req, res) => {
       <meta http-equiv="refresh" content="0; url=${payDetailUrl}" />
       <title>为好友买单</title>
   </head>
-  <body>正在加载订单...</body>
+  <body>正在跳转至代付详情...</body>
   </html>
   `);
 });
