@@ -85,12 +85,10 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
     <button class="btn w" onclick="addStore()">添加商家</button>
   </div>
 </div>
-
 <script>
 const SUPABASE_URL='https://dzesfxynbljtkwsbhbvq.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6ZXNmeHluYmxqdGt3c2JoYnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MjI1NjksImV4cCI6MjA5ODI2ODU2OX0.fcpHEdZUqNABHa1fZ0AJtkucwj-MYRPuSzDoQxkkLLk';
 const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
 let cart={};
 let ordersCache=[];
 let ordersPo
