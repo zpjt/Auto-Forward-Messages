@@ -16,13 +16,13 @@ const supabase = createClient(
 // === 分享中转路由：社交 App 抓取卡片专用 ===
 app.get('/share', async (req, res) => {
   const orderId = req.query.order_id;
-  // 指向你的 GitHub Pages 前端支付页面
   const payDetailUrl = 'https://lsscqc520-ship-it.github.io/Auto-Forward-Messages/pay.html?order_id=' + orderId;
 
   res.send(`
   <!DOCTYPE html>
-  <html>
+  <html lang="zh-CN">
   <head>
+      <meta charset="UTF-8">
       <meta property="og:title" content="来帮我代付吧！美团外卖" />
       <meta property="og:description" content="Hi，我和你的距离只差一顿外卖~ 点击查看订单详情" />
       <meta property="og:image" content="https://i.ibb.co/n9FPGnj/IMG-1830.png" />
