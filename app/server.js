@@ -13,10 +13,32 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+// === 新增：卡片分享路由 (用于社交 App 抓取卡片) ===
+app.get('/share', async (req, res) => {
+  const orderId = req.query.order_id;
+  // 这是你提供的前端地址
+  const payDetailUrl = 'https://lsscqc520-ship-it.github.io/Auto-Forward-Messages/pay.html?order_id=' + orderId;
+
+  res.send(`
+  <!DOCTYPE html>
+  <html>
+  <head>
+      <meta property="og:title" content="来帮我代付吧！美团外卖" />
+      <meta property="og:description" content="Hi，我和你的距离只差一顿外卖~ 点击查看订单详情" />
+      <meta property="og:image" content="https://i.ibb.co/n9FPGnj/IMG-1830.png" />
+      <meta property="og:type" content="website" />
+      <meta http-equiv="refresh" content="0; url=${payDetailUrl}" />
+      <title>为好友买单</title>
+  </head>
+  <body>正在加载订单...</body>
+  </html>
+  `);
+});
+
 // 获取订单
 app.get('/api/orders/:id', async (req, res) => {
   const { data, error } = await supabase
-    .from('orders') // 已修改为 orders
+    .from('orders')
     .select('*')
     .eq('id', parseInt(req.params.id))
     .single();
@@ -29,7 +51,7 @@ app.get('/api/orders/:id', async (req, res) => {
 app.post('/api/orders', async (req, res) => {
   const { content, total } = req.body;
   const { data, error } = await supabase
-    .from('orders') // 已修改为 orders
+    .from('orders')
     .insert([{ content, total, status: '待支付' }])
     .select();
     
@@ -42,7 +64,7 @@ app.post('/api/pay/notify', async (req, res) => {
   const { order_id, trade_status } = req.body;
   if (trade_status === 'SUCCESS') {
     await supabase
-      .from('orders') // 已修改为 orders
+      .from('orders')
       .update({ status: '已支付' })
       .eq('id', parseInt(order_id));
       
