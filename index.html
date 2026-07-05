@@ -283,50 +283,68 @@ function renderCart() {
   document.getElementById('cart-list').innerHTML = count > 0 ? html : '购物车为空';
 }
 
-function checkout() {
+// === 1. 完善提交订单逻辑 ===
+async function checkout() {
   if (Object.keys(cart).length === 0) return alert('购物车是空的，去选点吃的吧！');
-  alert('正在提交订单...');
-  // 提交订单逻辑可在此处扩展
-}
+  
+  // 将购物车对象转成 JSON 字符串，匹配你数据库里的 content 字段
+  const cartData = JSON.stringify(cart);
 
-// === 管理员鉴权逻辑 ===
-const ADMIN_KEY = 'jb_admin_ok';
-const ADMIN_PASSWORD = '123456';
+  // 插入数据到 orders 表
+  const { error } = await client.from('orders').insert([{ content: cartData }]);
 
-function isAdminLoggedIn(){
-  return localStorage.getItem(ADMIN_KEY) === '1';
-}
-
-function renderAdminPanel(){
-  const auth = document.getElementById('admin-auth');
-  const panel = document.getElementById('admin-panel');
-  if (!auth || !panel) return;
-
-  if (isAdminLoggedIn()) {
-    auth.style.display = 'none';
-    panel.style.display = 'block';
+  if (error) {
+    alert('提交订单失败: ' + error.message);
   } else {
-    auth.style.display = 'block';
-    panel.style.display = 'none';
+    alert('下单成功，商家已收到您的订单！');
+    cart = {}; // 清空本地购物车
+    renderCart(); // 刷新购物车页面
+    loadOrders(); // 刷新订单页面数据
   }
 }
 
-function adminLogin(){
-  const pw = document.getElementById('admin-pass').value.trim();
-  if (pw !== ADMIN_PASSWORD) {
-    alert('管理员密码错误');
+// === 2. 新增读取订单列表逻辑 ===
+async function loadOrders() {
+  const orderListEl = document.getElementById('order-list');
+  orderListEl.innerHTML = '加载中...';
+  
+  // 从数据库读取订单，按 ID 倒序排列（新订单在最上面）
+  const { data: orders, error } = await client.from('orders').select('*').order('id', { ascending: false });
+  
+  if (error) {
+    orderListEl.innerHTML = '<span class="muted">加载订单失败</span>';
     return;
   }
-  localStorage.setItem(ADMIN_KEY, '1');
-  renderAdminPanel();
-  alert('管理员登录成功');
+  
+  if (!orders || orders.length === 0) {
+    orderListEl.innerHTML = '<span class="muted">暂无订单</span>';
+    return;
+  }
+  
+  let html = '';
+  orders.forEach(order => {
+    // 尝试解析你数据库里的 JSON 格式内容
+    let orderDetail = '';
+    try {
+      const items = JSON.parse(order.content);
+      for (let key in items) {
+         orderDetail += `${items[key].name} <span class="muted">x${items[key].count}</span><br/>`;
+      }
+    } catch (e) {
+      // 如果解析失败（比如你前几行的 "羊肉粉 x1" 纯文本），就直接显示
+      orderDetail = order.content; 
+    }
+    
+    html += `
+    <div class="card">
+      <div style="margin-bottom: 8px;"><b>订单编号：#${order.id}</b></div>
+      <div>${orderDetail}</div>
+    </div>`;
+  });
+  
+  orderListEl.innerHTML = html;
 }
 
-function adminLogout(){
-  localStorage.removeItem(ADMIN_KEY);
-  renderAdminPanel();
-  alert('已退出管理员');
-}
 </script>
 </body>
 </html>
