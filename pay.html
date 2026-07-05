@@ -49,20 +49,31 @@
     }
     .title{font-weight:800;font-size:16px;margin-bottom:10px}
     .row{
-      display:flex;justify-content:space-between;gap:10px;align-items:flex-start;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
     }
     .muted{color:var(--muted);font-size:13px}
     .item{
-      display:flex;justify-content:space-between;gap:10px;
-      padding:10px 0;border-top:1px solid #f0f0f0;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 0;
+      border-top:1px solid #f0f0f0;
     }
     .item:first-child{border-top:0}
     .name{font-weight:700}
     .right{text-align:right;white-space:nowrap}
     .total{
-      display:flex;justify-content:space-between;align-items:center;
-      margin-top:10px;padding-top:12px;border-top:1px solid #f0f0f0;
-      font-size:16px;font-weight:800;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:10px;
+      padding-top:12px;
+      border-top:1px solid #f0f0f0;
+      font-size:16px;
+      font-weight:800;
     }
     .btn{
       width:100%;
@@ -74,17 +85,27 @@
       font-weight:800;
       cursor:pointer;
     }
-    .btn-pay{background:linear-gradient(135deg,var(--yellow),var(--yellow-dark));color:#111}
+    .btn-pay{
+      background:linear-gradient(135deg,var(--yellow),var(--yellow-dark));
+      color:#111;
+    }
     .btn-pay:active{transform:scale(.99)}
-    .btn-copy{background:#fff;border:1px solid #ddd;color:#111}
+    .btn-copy{
+      background:#fff;
+      border:1px solid #ddd;
+      color:#111;
+    }
     .loading{
       text-align:center;
       padding:30px 0;
       color:#444;
     }
     .spinner{
-      width:28px;height:28px;border-radius:50%;
-      border:4px solid #eee;border-top-color:var(--yellow);
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      border:4px solid #eee;
+      border-top-color:var(--yellow);
       animation:spin 1s linear infinite;
       margin:0 auto 10px;
     }
@@ -131,6 +152,56 @@
         <div class="row">
           <div>
             <div><b id="storeName">商家</b></div>
-            <div class="muted">订单号：<span id="orderId">-</span></div>
+            <div class="muted">订单号：<span id="orderId">加载中...</span></div>
           </div>
-          <div class="muted" id="orderSt...
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="title">商品明细</div>
+        <div id="itemList" class="box">
+          </div>
+        <div class="total">
+          <span>合计需代付</span>
+          <span style="color:#ff4d4f;">¥<span id="orderTotal">0.00</span></span>
+        </div>
+      </div>
+
+      <button class="btn btn-pay" onclick="handlePay()">立即代付</button>
+      <button class="btn btn-copy" onclick="copyLink()">复制代付链接</button>
+      <div class="hint">点击复制链接发送给您的好友即可帮您代付</div>
+    </div>
+  </div>
+
+  <script>
+    // 补全基础逻辑让界面能正确展示
+    document.addEventListener('DOMContentLoaded', () => {
+      // 模拟 1 秒后加载完毕
+      setTimeout(() => {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('orderBox').style.display = 'block';
+
+        // 填入模拟数据
+        document.getElementById('storeName').innerText = '正宗麻辣烫';
+        document.getElementById('orderId').innerText = 'MT893247923487';
+        document.getElementById('orderTotal').innerText = '28.50';
+
+        document.getElementById('itemList').innerHTML = `
+          <div class="item">
+            <span class="name">麻辣烫自选套餐</span>
+            <span class="right">x1<br><span class="muted">¥28.50</span></span>
+          </div>
+        `;
+      }, 1000);
+    });
+
+    function handlePay() {
+      alert('正在唤起支付接口...');
+    }
+
+    function copyLink() {
+      alert('代付链接已复制！');
+    }
+  </script>
+</body>
+</html>
