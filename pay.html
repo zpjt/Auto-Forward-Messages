@@ -7,7 +7,7 @@
 
   <meta property="og:title" content="来帮我代付吧！美团外卖" />
   <meta property="og:description" content="Hi，我和你的距离只差一顿外卖~ 点击帮我买单吧！" />
-  <meta property="og:image" content="https://Https://github.com/lsscqc520-ship-it/Auto-Forward-Messages/blob/main/IMG_1872.jpeg" />
+  <meta property="og:image" content="https://i.ibb.co/B288tR03/IMG-1894.jpg" />
   <meta property="og:type" content="website" />
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -21,6 +21,12 @@
     .hero h1{margin:0 0 6px;font-size:22px}
     .hero p{margin:0;color:#ddd;font-size:14px;line-height:1.6}
     .card{background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:14px;margin-top:12px;}
+    
+    /* 新增倒计时样式 */
+    .timer-box { text-align: center; padding: 20px 14px; }
+    .timer-box p { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+    .timer-box .time { font-size: 36px; font-weight: 900; color: #111; letter-spacing: 2px; }
+    
     .title{font-weight:800;font-size:16px;margin-bottom:10px}
     .item{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #f0f0f0;}
     .item:first-child{border-top:0}
@@ -28,7 +34,7 @@
     .btn{width:100%;margin-top:12px;border:0;border-radius:16px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;}
     .btn-pay{background:linear-gradient(135deg,var(--yellow),var(--yellow-dark));}
     .btn-share{background:#fff;border:1px solid #ddd;}
-    .loading{text-align:center;padding:30px 0;}
+    .loading{text-align:center;padding:30px 0; color: var(--muted);}
     .box{background:#fafafa;border:1px dashed #e5e5e5;border-radius:16px;padding:12px;margin-top:10px;}
   </style>
 </head>
@@ -42,6 +48,12 @@
     <div id="loading" class="card loading">正在加载订单...</div>
 
     <div id="orderBox" style="display:none;">
+      
+      <div class="card timer-box">
+        <p>剩余支付时间</p>
+        <div class="time" id="countdown">14:59</div>
+      </div>
+
       <div class="card">
         <div class="title">订单信息</div>
         <div>订单号：#<span id="orderId"></span></div>
@@ -60,30 +72,59 @@
   <script>
     const client = supabase.createClient('https://dzesfxynbljtkwsbhbvq.supabase.co', 'sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ');
 
+    // 倒计时逻辑
+    function startTimer(duration, display) {
+        let timer = duration;
+        setInterval(() => {
+            let minutes = parseInt(timer / 60, 10);
+            let seconds = parseInt(timer % 60, 10);
+            display.textContent = minutes + ":" + (seconds < 10 ? "0" + seconds : seconds);
+            if (--timer < 0) timer = 0;
+        }, 1000);
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
       const orderId = new URLSearchParams(window.location.search).get('order_id');
-      if (!orderId) return;
+      const loadingDiv = document.getElementById('loading');
 
-      const { data } = await client.from('orders').select('*').eq('id', orderId).single();
-      if (!data) return;
-
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('orderBox').style.display = 'block';
-      document.getElementById('orderId').innerText = data.id;
-
-      const items = JSON.parse(data.content);
-      let html = '', total = 0;
-      for (let id in items) {
-        html += `<div class="item"><span>${items[id].name} x${items[id].count}</span><span>¥${(items[id].price * items[id].count).toFixed(2)}</span></div>`;
-        total += items[id].price * items[id].count;
+      if (!orderId) {
+          loadingDiv.innerText = "未找到订单号";
+          return;
       }
-      document.getElementById('itemList').innerHTML = html;
-      document.getElementById('orderTotal').innerText = total.toFixed(2);
+
+      try {
+          const { data, error } = await client.from('orders').select('*').eq('id', orderId).single();
+          
+          if (error || !data) {
+              loadingDiv.innerText = "订单不存在或已过期";
+              return;
+          }
+
+          loadingDiv.style.display = 'none';
+          document.getElementById('orderBox').style.display = 'block';
+          document.getElementById('orderId').innerText = data.id;
+
+          const items = JSON.parse(data.content);
+          let html = '', total = 0;
+          for (let id in items) {
+            html += `<div class="item"><span>${items[id].name} x${items[id].count}</span><span>¥${(items[id].price * items[id].count).toFixed(2)}</span></div>`;
+            total += items[id].price * items[id].count;
+          }
+          document.getElementById('itemList').innerHTML = html;
+          document.getElementById('orderTotal').innerText = total.toFixed(2);
+
+          // 启动 15 分钟倒计时
+          startTimer(15 * 60, document.getElementById('countdown'));
+
+      } catch (err) {
+          loadingDiv.innerText = "网络异常，请刷新重试";
+      }
     });
 
     // 调用手机原生分享
     function shareOrder() {
       const orderId = new URLSearchParams(window.location.search).get('order_id');
+      // 这里确保调用的是你 Railway 后端的 /share 路由
       const shareUrl = 'https://auto-forward-messages-production.up.railway.app/share?order_id=' + orderId;
       
       if (navigator.share) {
@@ -94,11 +135,14 @@
         });
       } else {
         navigator.clipboard.writeText(shareUrl);
-        alert('链接已复制，快发给好友吧！');
+        alert('代付链接已复制，快去微信发给好友吧！');
       }
     }
 
-    function handlePay() { alert('正在唤起支付...'); }
+    function handlePay() { 
+        // 这里你后续可以改成弹出一个收款码图片，提示好友长按识别
+        alert('正在唤起支付...'); 
+    }
   </script>
 </body>
 </html>
