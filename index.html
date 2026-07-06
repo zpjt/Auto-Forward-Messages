@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>购物车系统</title>
+<title>美团外卖外包系统 | 购物车与商家管理</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f5f5f5;--card:#fff;--text:#111;--muted:#8a8a8a;--primary:#ffd000;--primary-dark:#ffbf00;--danger:#ff4d4f;--success:#00b578;--border:#ececec;--shadow:0 8px 24px rgba(0,0,0,.06);}
@@ -12,41 +12,76 @@ body{margin:0;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;backg
 .nav{display:flex;gap:10px;padding:14px 12px;background:linear-gradient(135deg,#111,#2b2b2b);position:sticky;top:0;z-index:10;overflow:auto}
 .nav-item{padding:10px 14px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,.08);color:#fff;font-weight:700;white-space:nowrap}
 .nav-item.active{background:var(--primary);color:#111}
-.tab-view{display:none;padding:14px;max-width:1100px;margin:0 auto}
+.tab-view{display:none;padding:14px;max-width:720px;margin:0 auto}
 .tab-view.active{display:block}
 h2{margin:8px 0 14px;font-size:22px;font-weight:800}
 .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-input,select{padding:12px 14px;border:1px solid #ddd;border-radius:14px;background:#fff;outline:none;width:100%}
+input,select{padding:12px 14px;border:1px solid #ddd;border-radius:14px;background:#fff;outline:none;width:100%;margin-bottom:10px;}
 .btn{padding:10px 14px;border:0;border-radius:14px;cursor:pointer;font-weight:700}
 .p{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#111;width:100%}
-.muted{color:var(--muted)}
+.btn-danger { background: var(--danger); color: #fff; padding: 6px 12px; border-radius: 8px; }
+.muted{color:var(--muted); text-align:center; padding: 20px 0;}
+.dish-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid #f9f9f9; }
+.admin-section { margin-top: 30px; border-top: 2px dashed #ccc; padding-top: 20px; }
 </style>
 </head>
 <body>
+
 <div class="nav">
-  <div class="nav-item active" data-tab="view-stores">🏪 商家</div>
-  <div class="nav-item" data-tab="view-cart">🛒 购物车</div>
-  <div class="nav-item" data-tab="view-orders">📋 订单</div>
+  <div class="nav-item active" data-tab="view-stores">🏪 进店点外卖</div>
+  <div class="nav-item" data-tab="view-cart">🛒 购物车 <span id="nav-cart-badge" style="color:red;font-weight:bold;"></span></div>
+  <div class="nav-item" data-tab="view-orders">📋 历史订单</div>
+  <div class="nav-item" data-tab="view-admin" style="margin-left:auto; background:rgba(255,0,0,0.2);">⚙️ 后台管理</div>
 </div>
 
 <div id="view-stores" class="tab-view active">
-  <h2>商家列表</h2>
-  <div id="store-list" class="muted">加载中...</div>
+  <h2>外卖商家列表</h2>
+  <div id="store-list" class="muted">正在搜寻附近的美味商家...</div>
 </div>
 
 <div id="view-cart" class="tab-view">
-  <h2>购物车</h2>
+  <h2>我的购物车</h2>
   <div class="card">
-    共 <b id="cart-count">0</b> 件，合计 ¥<b id="cart-total">0.00</b>
-    <button class="btn p" style="margin-top:10px;" onclick="checkout()">提交订单并进入代付页</button>
+    <div style="font-size:16px; margin-bottom:10px;">
+      共 <b id="cart-count" style="color:var(--danger);font-size:20px;">0</b> 件商品，
+      合计需付: <b style="color:var(--danger);font-size:20px;">¥<span id="cart-total">0.00</span></b>
+    </div>
+    <button class="btn p" style="padding:16px; font-size:16px;" onclick="checkout()">生成美团订单并去代付</button>
   </div>
-  <div id="cart-list" class="muted">购物车为空</div>
+  <div id="cart-list">
+    <div class="muted">购物车空空如也，快去点单吧！</div>
+  </div>
 </div>
 
 <div id="view-orders" class="tab-view">
-  <h2>订单</h2>
-  <div id="order-list" class="muted">加载中...</div>
+  <h2>历史点单存根</h2>
+  <div id="order-list" class="muted">暂无提交的历史订单</div>
+</div>
+
+<div id="view-admin" class="tab-view">
+  <h2>系统权限后台</h2>
+  <div class="card" id="admin-login-box">
+    <p>请输入管理员后台口令以进行数据新增：</p>
+    <input type="password" id="admin-pass" placeholder="请输入口令..." />
+    <button class="btn p" onclick="verifyAdmin()">进入管理系统</button>
+  </div>
+
+  <div id="admin-content" style="display:none;">
+    <div class="card">
+      <h3>新增外卖商家店铺</h3>
+      <input type="text" id="new-store-name" placeholder="如：麦当劳德克士（人民路店）" />
+      <button class="btn p" onclick="addStore()">确认上架新店铺</button>
+    </div>
+    <div class="card">
+      <h3>往店铺增添新菜品/套餐</h3>
+      <label>选择目标所属商家：</label>
+      <select id="select-store-id" style="margin-top:5px;"></select>
+      <input type="text" id="new-dish-name" placeholder="如：香辣鸡腿堡双人餐" />
+      <input type="number" step="0.01" id="new-dish-price" placeholder="单价（元）例如：29.9" />
+      <button class="btn p" onclick="addDish()">确认上架该商品</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -58,6 +93,8 @@ let cart = {};
 document.addEventListener('DOMContentLoaded', () => {
   loadStores();
   loadOrders();
+  
+  // 选项卡切换控制
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -68,54 +105,182 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// 验证登录后台
+function verifyAdmin() {
+  const pass = document.getElementById('admin-pass').value;
+  if(pass === 'admin123') { // 这里设置你的后台进入密码，可以随意修改
+    document.getElementById('admin-login-box').style.display = 'none';
+    document.getElementById('admin-content').style.display = 'block';
+    updateAdminStoreSelect();
+  } else {
+    alert('安全密码错误，拒绝访问！');
+  }
+}
+
+// 渲染主页商家和对应的菜品
 async function loadStores() {
-  const { data: stores } = await client.from('stores').select('*');
+  const { data: stores } = await client.from('stores').select('*').order('id', { ascending: false });
   const { data: dishes } = await client.from('dishes').select('*');
   const storeListEl = document.getElementById('store-list');
+  
+  if(!stores || stores.length === 0) {
+    storeListEl.innerHTML = '<div class="muted">暂无入驻商家，请去后台添加</div>';
+    return;
+  }
+
   let html = '';
   stores.forEach(store => {
-    html += `<div class="card"><b>🏪 ${store.name}</b>`;
-    dishes.filter(d => d.store_id === store.id).forEach(dish => {
-      html += `<div class="row" style="justify-content:space-between;margin-top:10px;">
-        <span>${dish.name} (¥${dish.price})</span>
-        <button class="btn p" onclick="addToCart('${dish.id}', '${dish.name}', ${dish.price})">加入</button>
-      </div>`;
-    });
-    html += `</div>`;
+    html += `<div class="card" style="border-left: 5px solid var(--primary);"><b style="font-size:18px;">🏪 ${store.name}</b><div style="margin-top:8px;">`;
+    
+    const storeDishes = dishes ? dishes.filter(d => d.store_id === store.id) : [];
+    if(storeDishes.length === 0) {
+      html += `<div style="color:#aaa; font-size:13px; padding:10px 0;">该商家暂无上架商品...</div>`;
+    } else {
+      storeDishes.forEach(dish => {
+        html += `<div class="dish-item">
+          <div>
+            <div style="font-weight:bold;">${dish.name}</div>
+            <div style="color:var(--danger); font-size:14px; margin-top:2px;">¥${parseFloat(dish.price).toFixed(2)}</div>
+          </div>
+          <button class="btn p" style="width:auto; padding:6px 14px; border-radius:10px;" onclick="addToCart('${dish.id}', '${dish.name}', ${dish.price})">加入🛒</button>
+        </div>`;
+      });
+    }
+    
+    html += `</div></div>`;
   });
   storeListEl.innerHTML = html;
 }
 
-async function checkout() {
-  if (Object.keys(cart).length === 0) return alert('购物车是空的！');
-  const { data, error } = await client.from('orders').insert([{ content: JSON.stringify(cart) }]).select();
-  if (error) return alert('提交失败: ' + error.message);
-  
-  // 跳转到你的代付页面
-  window.location.href = 'pay.html?order_id=' + data[0].id;
-}
-
+// 加入购物车
 function addToCart(id, name, price) {
-  if (cart[id]) cart[id].count++;
-  else cart[id] = { name, price, count: 1 };
+  if (cart[id]) {
+    cart[id].count++;
+  } else {
+    cart[id] = { name, price, count: 1 };
+  }
   renderCart();
+  
+  // 震动提示（如果在手机上支持）
+  if(navigator.vibrate) navigator.vibrate(50);
 }
 
+// 渲染购物车视图
 function renderCart() {
   let total = 0, count = 0, html = '';
   for (let id in cart) {
     total += cart[id].price * cart[id].count;
     count += cart[id].count;
-    html += `<div class="card">${cart[id].name} x${cart[id].count}</div>`;
+    html += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <b style="font-size:15px;">${cart[id].name}</b>
+        <div style="color:var(--muted); font-size:13px; margin-top:3px;">单价: ¥${cart[id].price.toFixed(2)}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-weight:bold;">x${cart[id].count}</span>
+        <button class="btn-danger" onclick="removeFromCart('${id}')">移除</button>
+      </div>
+    </div>`;
   }
   document.getElementById('cart-count').innerText = count;
+  document.getElementById('nav-cart-badge').innerText = count > 0 ? `(${count})` : '';
   document.getElementById('cart-total').innerText = total.toFixed(2);
-  document.getElementById('cart-list').innerHTML = count > 0 ? html : '购物车为空';
+  document.getElementById('cart-list').innerHTML = count > 0 ? html : '<div class="muted">购物车空空如也，快去点单吧！</div>';
 }
 
+// 从购物车中减去或移除
+function removeFromCart(id) {
+  if (cart[id]) {
+    cart[id].count--;
+    if(cart[id].count <= 0) delete cart[id];
+  }
+  renderCart();
+}
+
+// 提交订单，写入数据库并跳转
+async function checkout() {
+  if (Object.keys(cart).length === 0) return alert('请先去选择你想吃的菜品物料！');
+  
+  // 计算此时的总价
+  let totalAmount = 0;
+  for(let key in cart) {
+    totalAmount += cart[key].price * cart[key].count;
+  }
+
+  // 向 Supabase 的 orders 表插入订单：包含明细内容、总价和初始待支付状态
+  const { data, error } = await client.from('orders').insert([
+    { 
+      content: JSON.stringify(cart),
+      total: totalAmount,
+      status: '待支付'
+    }
+  ]).select();
+
+  if (error) {
+    return alert('提交订单发生网络阻断: ' + error.message);
+  }
+  
+  // 成功提交后，当场清空本地购物车，防止逻辑混淆
+  cart = {};
+  renderCart();
+  
+  // 顺畅跳转到你修改完备、带倒计时和收款码唤醒的支付结算落地页
+  window.location.href = 'pay.html?order_id=' + data[0].id;
+}
+
+// 加载历史订单展示
 async function loadOrders() {
-  const { data: orders } = await client.from('orders').select('*').order('id', { ascending: false });
-  document.getElementById('order-list').innerHTML = (orders||[]).map(o => `<div class="card">订单 #${o.id}</div>`).join('');
+  const { data: orders } = await client.from('orders').select('*').order('id', { ascending: false }).limit(10);
+  if(orders && orders.length > 0) {
+    document.getElementById('order-list').innerHTML = orders.map(o => `
+      <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <b>订单号: #${o.id}</b>
+          <div style="font-size:12px; color:var(--muted); margin-top:4px;">状态：<span style="color:${o.status==='已支付'?'var(--success)':'var(--danger)'}; font-weight:bold;">${o.status || '待支付'}</span></div>
+        </div>
+        <button class="btn" onclick="window.location.href='pay.html?order_id=${o.id}'" style="font-size:13px; background:#eee;">查看代付面板</button>
+      </div>
+    `).join('');
+  }
+}
+
+// === 管理员后台数据库写入逻辑 ===
+async function updateAdminStoreSelect() {
+  const { data: stores } = await client.from('stores').select('*');
+  const select = document.getElementById('select-store-id');
+  if(stores) {
+    select.innerHTML = stores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  }
+}
+
+async function addStore() {
+  const name = document.getElementById('new-store-name').value.trim();
+  if(!name) return alert('请输入商家名称！');
+  const { error } = await client.from('stores').insert([{ name }]);
+  if(error) alert('上架失败:' + error.message);
+  else {
+    alert('新商家店铺上架成功！');
+    document.getElementById('new-store-name').value = '';
+    loadStores();
+    updateAdminStoreSelect();
+  }
+}
+
+async function addDish() {
+  const storeId = document.getElementById('select-store-id').value;
+  const name = document.getElementById('new-dish-name').value.trim();
+  const price = parseFloat(document.getElementById('new-dish-price').value);
+  
+  if(!storeId || !name || isNaN(price)) return alert('请确保商家已选择，且名字和单价填写无误！');
+  
+  const { error } = await client.from('dishes').insert([{ store_id: parseInt(storeId), name, price }]);
+  if(error) alert('商品上架失败:' + error.message);
+  else {
+    alert('该商品已成功上架进入店铺菜单！');
+    document.getElementById('new-dish-name').value = '';
+    document.getElementById('new-dish-price').value = '';
+    loadStores();
+  }
 }
 </script>
 </body>
