@@ -13,7 +13,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// === 分享中转路由：使用最新的卡片图片链接，优化瞬间跳转 ===
 app.get('/share', async (req, res) => {
   const orderId = req.query.order_id;
   const payDetailUrl = 'https://lsscqc520-ship-it.github.io/Auto-Forward-Messages/pay.html?order_id=' + orderId;
@@ -40,7 +39,6 @@ app.get('/share', async (req, res) => {
   `);
 });
 
-// 获取订单
 app.get('/api/orders/:id', async (req, res) => {
   const { data, error } = await supabase
     .from('orders')
@@ -52,7 +50,6 @@ app.get('/api/orders/:id', async (req, res) => {
   res.json(data);
 });
 
-// 创建订单
 app.post('/api/orders', async (req, res) => {
   const { content, total } = req.body;
   const { data, error } = await supabase
@@ -64,7 +61,20 @@ app.post('/api/orders', async (req, res) => {
   res.json({ success: true, data });
 });
 
-// 支付通知
+app.post('/api/shops', async (req, res) => {
+  const { name } = req.body; 
+  if (!name) {
+    return res.status(400).json({ error: '店铺名称不能为空' });
+  }
+  const { data, error } = await supabase
+    .from('shops') 
+    .insert([{ name }])
+    .select();
+    
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ success: true, data });
+});
+
 app.post('/api/pay/notify', async (req, res) => {
   const { order_id, trade_status } = req.body;
   if (trade_status === 'SUCCESS') {
