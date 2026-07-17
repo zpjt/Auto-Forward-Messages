@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>外卖点单系统</title>
-    <script src="https://tailwindcss.com"></script>
+    <!-- ⚡ 已修正：替换为正确的 Tailwind v4 Play CDN 链接，确保样式和颜色正常渲染 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -111,7 +112,6 @@
                 ...options.headers
             };
             
-            // 只有当不是 POST/PATCH 等操作或者明确需要返回值时才加 Prefer
             if (options.method && options.method !== 'GET') {
                 headers['Prefer'] = 'return=representation';
             }
@@ -231,7 +231,6 @@
             document.getElementById('stores-section').classList.remove('hidden');
         }
 
-        // 购物车逻辑优化：去除繁琐弹窗，改用 Badge 提示
         function addToCart(dishId, dishName, price) {
             const item = cart.find(i => i.dishId === dishId);
             if (item) { item.quantity += 1; } else { cart.push({ dishId, dishName, price, quantity: 1 }); }
@@ -280,23 +279,30 @@
             document.getElementById('cart-total-price').innerText = `$${total.toFixed(2)}`;
         }
 
+        // 💰 升级：集成了支付密码验证的“模拟真实支付”逻辑
         async function checkout() {
             if (cart.length === 0) return;
             let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             let contentString = cart.map(item => `${item.dishName}x${item.quantity}`).join(', ');
             
+            // 弹出模拟付款验证框
+            const pin = prompt(`💰 订单总额: $${total.toFixed(2)}\n请输入支付密码以模拟付款 (默认密码: 123456)`);
+            if (pin === null) { alert('支付已取消'); return; }
+            
+            let payStatus = (pin === '123456') ? '已支付' : '待支付';
+            if (payStatus === '待支付') { alert('密码错误！订单已生成，状态设为：待支付。'); }
+
             try {
-                // 显式传入当前 ISO 时间，防止因后端没设 default 产生 Invalid Date 错误
                 await supabaseFetch('orders', {
                     method: 'POST',
                     body: JSON.stringify({ 
                         content: contentString, 
                         total: total, 
-                        status: '待支付',
+                        status: payStatus,
                         created_at: new Date().toISOString()
                     })
                 });
-                alert('订单创建成功！');
+                if (payStatus === '已支付') alert('🎉 模拟支付成功，订单已下发商家！');
                 cart = [];
                 updateCartBadge();
                 switchTab('orders');
