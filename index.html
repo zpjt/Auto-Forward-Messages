@@ -1,35 +1,3 @@
-从你提供的代码和描述来看，这个页面无法正常访问或者无法加载商家数据，主要是由于前端代码中引用的 CDN 资源有误以及数据库配置可能未初始化两个原因共同导致的。
-下面我为你逐一拆解原因，并给出具体的修复方案。
-原因一：前端资源加载失败（直接导致页面JS崩溃）
-在你的 HTML 代码中，有以下两处资源引入存在严重问题：
-1. 错误的 CDN 地址
-<script src="https://jsdelivr.net"></script>
-
- * 问题： 这个链接是无效的。jsdelivr.net 是一个 CDN 域名的主站，它本身不提供任何合法的 JS 脚本。加载这个错误的链接会导致浏览器报 404 错误，并可能阻塞后续 <script> 脚本的执行。
- * 解决办法： 如果它是无用的，请直接删掉这一行。
-2. Supabase 客户端初始化时机问题
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
- * 问题： 你在头部引入了 Supabase 的官方 CDN，但在底部的 JavaScript 代码中，你直接使用了：
-   const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-   在某些网络环境下，如果顶部的 Supabase JS 还没加载完毕，浏览器就会去解析并执行底部的 window.supabase，这会导致报 Uncaught TypeError: Cannot read properties of undefined (reading 'createClient') 错误，从而导致后续的页面切换、数据加载等逻辑彻底瘫痪。
- * 解决办法： 将 Supabase 的 <script> 标签移到整个 <body> 的最底部，紧贴着你自己的 <script> 标签之前。
-原因二：数据库配置与表结构问题（导致数据加载为空）
-如果你修复了前端的 JS 报错，页面依然显示“正在搜寻附近的美味商家...”或者“暂无入驻商家”，这属于数据库原因。
-1. 检查 Supabase 实例 URL
-在你的代码中：
-const SUPABASE_URL='https://supabase.co'; // ⚠️ 这是一个占位符，不是你真实的数据库地址
-
- * 问题： [https://supabase.co](https://supabase.co) 只是官方主页。你必须登录 Supabase 官网后台，进入你的 Project，在 Project Settings -> API 中找到你的 Project URL（通常长这样：[https://xxxxxx.supabase.co](https://xxxxxx.supabase.co)）。
- * 解决办法： 将 SUPABASE_URL 替换为你专属的数据库 API 地址。
-2. 数据库中是否建表并开启了 RLS（安全策略）
-Supabase 默认开启了 RLS（Row Level Security，行级安全策略）。如果你只建了表，但没有配置 Policy（策略），前端使用 anon（匿名）Key 去查询数据时，Supabase 会出于安全考虑返回空数据 []。
- * 解决办法：
-   * 确保你的 Supabase 项目中创建了 stores、dishes 和 orders 三张表。
-   * 确保在 Supabase 后台为这三张表开启了 Read（Select） 和 Insert 的公共访问权限（允许 anon 匿名用户操作），或者直接在测试期间关闭这几张表的 RLS（不推荐在生产环境关闭）。
-🛠️ 完整修复后的 HTML 代码
-这里是为你修正了前端 CDN 错误、优化了解析顺序后的完整代码。你只需要将代码中 YOUR_ACTUAL_SUPABASE_URL 替换为你在 Supabase 后台申请的真实 URL 即可正常运行：
 <!doctype html>
 <html lang="zh-CN">
 <head>
