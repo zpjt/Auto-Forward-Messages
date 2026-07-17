@@ -1,294 +1,428 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Food Delivery System | Cart & Merchant</title>
-<style>
-:root{--bg:#f5f5f5;--card:#fff;--text:#111;--muted:#8a8a8a;--primary:#ffd000;--primary-dark:#ffbf00;--danger:#ff4d4f;--success:#00b578;--border:#ececec;--shadow:0 8px 24px rgba(0,0,0,.06);}
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
-.nav{display:flex;gap:10px;padding:14px 12px;background:linear-gradient(135deg,#111,#2b2b2b);position:sticky;top:0;z-index:10;overflow:auto}
-.nav-item{padding:10px 14px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,.08);color:#fff;font-weight:700;white-space:nowrap}
-.nav-item.active{background:var(--primary);color:#111}
-.tab-view{display:none;padding:14px;max-width:720px;margin:0 auto}
-.tab-view.active{display:block}
-h2{margin:8px 0 14px;font-size:22px;font-weight:800}
-.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
-input,select{padding:12px 14px;border:1px solid #ddd;border-radius:14px;background:#fff;outline:none;width:100%;margin-bottom:10px;}
-.btn{padding:10px 14px;border:0;border-radius:14px;cursor:pointer;font-weight:700}
-.p{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#111;width:100%}
-.btn-danger { background: var(--danger); color: #fff; padding: 6px 12px; border-radius: 8px; }
-.muted{color:var(--muted); text-align:center; padding: 20px 0;}
-.dish-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid #f9f9f9; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外卖点单系统</title>
+    <!-- 引入 Tailwind CSS 进行美化 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen pb-24">
 
-<div class="nav">
-  <div class="nav-item active" data-tab="view-stores">🏪 Stores</div>
-  <div class="nav-item" data-tab="view-cart">🛒 Cart <span id="nav-cart-badge" style="color:red;font-weight:bold;"></span></div>
-  <div class="nav-item" data-tab="view-orders">📋 Orders</div>
-  <div class="nav-item" data-tab="view-admin" style="margin-left:auto; background:rgba(255,0,0,0.2);">⚙️ Admin</div>
-</div>
-
-<div id="view-stores" class="tab-view active">
-  <h2>Store List</h2>
-  <div id="store-list" class="muted">Searching for delicious food nearby...</div>
-</div>
-
-<div id="view-cart" class="tab-view">
-  <h2>My Shopping Cart</h2>
-  <div class="card">
-    <div style="font-size:16px; margin-bottom:10px;">
-      Total: <b id="cart-count" style="color:var(--danger);font-size:20px;">0</b> items, 
-      Amount due: <b style="color:var(--danger);font-size:20px;">$ <span id="cart-total">0.00</span></b>
-    </div>
-    <button class="btn p" style="padding:16px; font-size:16px;" onclick="checkout()">Submit Order & Proceed to Pay</button>
-  </div>
-  <div id="cart-list">
-    <div class="muted">Your cart is empty. Go add some delicious food!</div>
-  </div>
-</div>
-
-<div id="view-orders" class="tab-view">
-  <h2>Order History</h2>
-  <div id="order-list" class="muted">No submitted orders yet.</div>
-</div>
-
-<div id="view-admin" class="tab-view">
-  <h2>Admin Portal</h2>
-  <div class="card" id="admin-login-box">
-    <p>Please enter the admin password to manage data:</p>
-    <input type="password" id="admin-pass" placeholder="Enter password..." />
-    <button class="btn p" onclick="verifyAdmin()">Login</button>
-  </div>
-
-  <div id="admin-content" style="display:none;">
-    <div class="card">
-      <h3>Add New Store</h3>
-      <input type="text" id="new-store-name" placeholder="Store Name (e.g., McDonald's)" />
-      <!-- 新增：店铺图片链接输入框 -->
-      <input type="text" id="new-store-image" placeholder="Store Image URL (Optional, e.g., https://...)" />
-      <button class="btn p" onclick="addStore()">Add Store</button>
-    </div>
-    <div class="card">
-      <h3>Add New Item to Store</h3>
-      <label>Select Target Store:</label>
-      <select id="select-store-id" style="margin-top:5px;"></select>
-      <input type="text" id="new-dish-name" placeholder="Dish Name (e.g., Cheeseburger)" />
-      <input type="number" step="0.01" id="new-dish-price" placeholder="Price ($) e.g., 9.99" />
-      <!-- 新增：菜品图片链接输入框 -->
-      <input type="text" id="new-dish-image" placeholder="Dish Image URL (Optional, e.g., https://...)" />
-      <button class="btn p" onclick="addDish()">Add Item</button>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-const SUPABASE_URL = 'https://qyqufrqiwcsxwzbygnr.supabase.co'; 
-const SUPABASE_KEY = 'sb_publishable_Blg1p2gwATV6FR7ha8Wt3A_Y_MB7I4y';
-
-let client;
-try {
-  client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} catch(e) {
-  console.error("Failed to initialize Supabase client:", e);
-}
-
-let cart = {};
-
-document.addEventListener('DOMContentLoaded', () => {
-  if (client) loadStores();
-  
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', () => {
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
-      item.classList.add('active');
-      document.getElementById(item.getAttribute('data-tab')).classList.add('active');
-      
-      if(item.getAttribute('data-tab') === 'view-orders') loadOrders();
-    });
-  });
-});
-
-function verifyAdmin() {
-  const pass = document.getElementById('admin-pass').value;
-  if(pass === 'admin123') { 
-    document.getElementById('admin-login-box').style.display = 'none';
-    document.getElementById('admin-content').style.display = 'block';
-    updateAdminStoreSelect();
-  } else {
-    alert('Incorrect security password! Access denied.');
-  }
-}
-
-async function loadStores() {
-  try {
-    const { data: stores } = await client.from('stores').select('*').order('id', { ascending: false });
-    const { data: dishes } = await client.from('dishes').select('*');
-    const storeListEl = document.getElementById('store-list');
-    
-    if(!stores || stores.length === 0) {
-      storeListEl.innerHTML = '<div class="muted">No stores available. Please go to Admin tab to add one.</div>';
-      return;
-    }
-
-    let html = '';
-    stores.forEach(store => {
-      // 渲染店铺图片
-      const storeImg = store.image_url ? `<img src="${store.image_url}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;margin-right:12px;">` : '';
-      
-      html += `<div class="card" style="border-left: 5px solid var(--primary);">
-        <div style="display:flex; align-items:center; margin-bottom: 10px;">
-          ${storeImg}
-          <b style="font-size:18px;">🏪 ${store.name}</b>
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-md mx-auto px-4 flex justify-around py-3">
+            <button onclick="switchTab('stores')" id="tab-stores" class="font-bold text-yellow-500 border-b-2 border-yellow-500 pb-1">Stores</button>
+            <button onclick="switchTab('cart')" id="tab-cart" class="font-bold text-gray-500 pb-1">Cart</button>
+            <button onclick="switchTab('orders')" id="tab-orders" class="font-bold text-gray-500 pb-1">Orders</button>
+            <button onclick="switchTab('admin')" id="tab-admin" class="font-bold text-gray-500 pb-1">Admin</button>
         </div>
-        <div>`;
-      
-      const storeDishes = dishes ? dishes.filter(d => d.store_id === store.id) : [];
-      if(storeDishes.length === 0) {
-        html += `<div style="color:#aaa; font-size:13px; padding:10px 0;">No items available in this store...</div>`;
-      } else {
-        storeDishes.forEach(dish => {
-          // 渲染菜品图片
-          const dishImg = dish.image_url ? `<img src="${dish.image_url}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;margin-right:12px;">` : '';
-          
-          html += `<div class="dish-item" style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center;">
-              ${dishImg}
-              <div>
-                <div style="font-weight:bold;">${dish.name}</div>
-                <div style="color:var(--danger); font-size:14px; margin-top:4px;">$ ${parseFloat(dish.price).toFixed(2)}</div>
-              </div>
+    </nav>
+
+    <!-- 主体内容 -->
+    <main class="max-w-md mx-auto px-4 py-6">
+        
+        <!-- Stores 页面 -->
+        <div id="content-stores" class="tab-content active">
+            <h1 class="text-2xl font-black mb-6">Explore Restaurants</h1>
+            <div id="stores-list" class="space-y-4">
+                <p class="text-gray-500 text-center py-8">Loading restaurants...</p>
             </div>
-            <button class="btn p" style="width:auto; padding:6px 14px; border-radius:10px;" onclick="addToCart('${dish.id}', '${dish.name}', ${dish.price})">Add 🛒</button>
-          </div>`;
-        });
-      }
-      html += `</div></div>`;
-    });
-    storeListEl.innerHTML = html;
-  } catch (err) {
-    console.error("Database request exception: ", err);
-  }
-}
-
-function addToCart(id, name, price) {
-  if (cart[id]) cart[id].count++;
-  else cart[id] = { name, price, count: 1 };
-  renderCart();
-  if(navigator.vibrate) navigator.vibrate(50);
-}
-
-function renderCart() {
-  let total = 0, count = 0, html = '';
-  for (let id in cart) {
-    total += cart[id].price * cart[id].count;
-    count += cart[id].count;
-    html += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-      <div>
-        <b style="font-size:15px;">${cart[id].name}</b>
-        <div style="color:var(--muted); font-size:13px; margin-top:3px;">Price: $ ${cart[id].price.toFixed(2)}</div>
-      </div>
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-weight:bold;">x${cart[id].count}</span>
-        <button class="btn-danger" onclick="removeFromCart('${id}')">Remove</button>
-      </div>
-    </div>`;
-  }
-  document.getElementById('cart-count').innerText = count;
-  document.getElementById('nav-cart-badge').innerText = count > 0 ? `(${count})` : '';
-  document.getElementById('cart-total').innerText = total.toFixed(2);
-  document.getElementById('cart-list').innerHTML = count > 0 ? html : '<div class="muted">Your cart is empty. Go add some delicious food!</div>';
-}
-
-function removeFromCart(id) {
-  if (cart[id]) {
-    cart[id].count--;
-    if(cart[id].count <= 0) delete cart[id];
-  }
-  renderCart();
-}
-
-async function checkout() {
-  if (Object.keys(cart).length === 0) return alert('Please select your items first!');
-  
-  let totalAmount = 0;
-  for(let key in cart) totalAmount += cart[key].price * cart[key].count;
-
-  const { data, error } = await client.from('orders').insert([
-    { content: JSON.stringify(cart), total: totalAmount, status: 'Pending' }
-  ]).select();
-
-  if (error) return alert('Failed to submit order: ' + error.message);
-  
-  cart = {};
-  renderCart();
-  window.location.href = 'pay.html?order_id=' + data[0].id;
-}
-
-async function loadOrders() {
-  const { data: orders } = await client.from('orders').select('*').order('id', { ascending: false }).limit(10);
-  if(orders && orders.length > 0) {
-    document.getElementById('order-list').innerHTML = orders.map(o => `
-      <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <b>Order ID: #${o.id}</b>
-          <div style="font-size:12px; color:var(--muted); margin-top:4px;">Status: <span style="color:${o.status==='Paid'?'var(--success)':'var(--danger)'}; font-weight:bold;">${o.status || 'Pending'}</span></div>
+            <!-- 菜品列表容器 (点击店铺后显示) -->
+            <div id="dishes-section" class="hidden mt-8">
+                <button onclick="backToStores()" class="mb-4 text-sm font-bold text-yellow-600 flex items-center">← Back to Restaurants</button>
+                <h2 id="current-store-name" class="text-2xl font-black mb-4">Store Name</h2>
+                <div id="dishes-list" class="space-y-4"></div>
+            </div>
         </div>
-        <button class="btn" onclick="window.location.href='pay.html?order_id=${o.id}'" style="font-size:13px; background:#eee;">View Invoice</button>
-      </div>
-    `).join('');
-  } else {
-    document.getElementById('order-list').innerHTML = '<div class="muted">No submitted orders yet.</div>';
-  }
-}
 
-async function updateAdminStoreSelect() {
-  const { data: stores } = await client.from('stores').select('*');
-  const select = document.getElementById('select-store-id');
-  if(stores) select.innerHTML = stores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-}
+        <!-- Cart 页面 -->
+        <div id="content-cart" class="tab-content">
+            <h1 class="text-2xl font-black mb-6">Your Cart</h1>
+            <div id="cart-items" class="space-y-4"></div>
+            <div id="cart-summary" class="mt-8 bg-white p-4 rounded-2xl shadow-sm hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-gray-600">Total Price</span>
+                    <span id="cart-total-price" class="text-xl font-bold text-red-500">$0.00</span>
+                </div>
+                <button onclick="checkout()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-black py-4 rounded-2xl shadow-lg transition duration-200">
+                    Place Order & Pay
+                </button>
+            </div>
+        </div>
 
-async function addStore() {
-  const name = document.getElementById('new-store-name').value.trim();
-  const image_url = document.getElementById('new-store-image').value.trim();
-  
-  if(!name) return alert('Please enter a store name!');
-  
-  const { error } = await client.from('stores').insert([{ name, image_url }]);
-  if(error) alert('Failed to add store: ' + error.message);
-  else {
-    alert('Store added successfully!');
-    document.getElementById('new-store-name').value = '';
-    document.getElementById('new-store-image').value = '';
-    loadStores();
-    updateAdminStoreSelect();
-  }
-}
+        <!-- Orders 页面 -->
+        <div id="content-orders" class="tab-content">
+            <h1 class="text-2xl font-black mb-6">Your Orders</h1>
+            <div id="orders-list" class="space-y-4">
+                <p class="text-gray-500 text-center py-8">No orders placed yet.</p>
+            </div>
+        </div>
 
-async function addDish() {
-  const storeId = document.getElementById('select-store-id').value;
-  const name = document.getElementById('new-dish-name').value.trim();
-  const price = parseFloat(document.getElementById('new-dish-price').value);
-  const image_url = document.getElementById('new-dish-image').value.trim();
-  
-  if(!storeId || !name || isNaN(price)) return alert('Please check inputs: store, name, and valid price are required!');
-  
-  const { error } = await client.from('dishes').insert([{ store_id: parseInt(storeId), name, price, image_url }]);
-  if(error) alert('Failed to add item: ' + error.message);
-  else {
-    alert('Item added successfully!');
-    document.getElementById('new-dish-name').value = '';
-    document.getElementById('new-dish-price').value = '';
-    document.getElementById('new-dish-image').value = '';
-    loadStores();
-  }
-}
-</script>
+        <!-- Admin 页面 -->
+        <div id="content-admin" class="tab-content">
+            <!-- 登录表单 -->
+            <div id="admin-login" class="bg-white p-6 rounded-2xl shadow-sm">
+                <h2 class="text-xl font-black mb-4">Admin Login</h2>
+                <input type="password" id="admin-password" placeholder="Enter admin password" class="w-full border border-gray-300 p-4 rounded-2xl mb-4 focus:ring-2 focus:ring-yellow-500 outline-none">
+                <button onclick="loginAdmin()" class="w-full bg-black text-white font-black py-4 rounded-2xl">Login</button>
+            </div>
+
+            <!-- 管理面板 -->
+            <div id="admin-portal" class="hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-black">Admin Portal</h2>
+                    <button onclick="logoutAdmin()" class="text-sm text-red-500 font-bold">Logout</button>
+                </div>
+
+                <!-- 添加店铺 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="font-bold text-lg">Add New Store</h3>
+                    <input type="text" id="new-store-name" placeholder="Store Name" class="w-full border p-3 rounded-xl outline-none">
+                    <input type="text" id="new-store-image" placeholder="Store Image URL (Optional)" class="w-full border p-3 rounded-xl outline-none">
+                    <button onclick="addStore()" class="w-full bg-yellow-500 font-bold py-3 rounded-xl">Add Store</button>
+                </div>
+
+                <!-- 添加菜品 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="font-bold text-lg">Add New Item to Store</h3>
+                    <select id="target-store-select" class="w-full border p-3 rounded-xl outline-none">
+                        <option value="">Select Target Store</option>
+                    </select>
+                    <input type="text" id="new-dish-name" placeholder="Dish Name" class="w-full border p-3 rounded-xl outline-none">
+                    <input type="number" step="0.01" id="new-dish-price" placeholder="Price ($)" class="w-full border p-3 rounded-xl outline-none">
+                    <input type="text" id="new-dish-image" placeholder="Dish Image URL (Optional)" class="w-full border p-3 rounded-xl outline-none">
+                    <button onclick="addDish()" class="w-full bg-yellow-500 font-bold py-3 rounded-xl">Add Item</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- JS 逻辑部分 -->
+    <script>
+        // Supabase 配置
+        const SUPABASE_URL = 'https://qyqufrqiwcsxwzbygnr.supabase.co';
+        const SUPABASE_KEY = 'Sb_publishable_Blg1p2gwATV6FR7ha8Wt3A_Y_MB7I4y';
+
+        // 统一的数据请求发送封装（原生 fetch，彻底避免库不兼容问题）
+        async function supabaseFetch(path, options = {}) {
+            const url = `${SUPABASE_URL}/rest/v1/${path}`;
+            const headers = {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation',
+                ...options.headers
+            };
+
+            const response = await fetch(url, { ...options, headers });
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(errText || `HTTP ${response.status}`);
+            }
+            return response.json();
+        }
+
+        // 状态管理
+        let stores = [];
+        let dishes = [];
+        let cart = [];
+        let currentStoreId = null;
+
+        // 页面初始化加载
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStores();
+        });
+
+        // 标签切换
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`content-${tabId}`).classList.add('active');
+
+            document.querySelectorAll('nav button').forEach(el => {
+                el.classList.remove('text-yellow-500', 'border-b-2', 'border-yellow-500');
+                el.classList.add('text-gray-500');
+            });
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.remove('text-gray-500');
+            activeBtn.classList.add('text-yellow-500', 'border-b-2', 'border-yellow-500');
+
+            if (tabId === 'stores') {
+                backToStores();
+                loadStores();
+            } else if (tabId === 'cart') {
+                renderCart();
+            } else if (tabId === 'orders') {
+                loadOrders();
+            }
+        }
+
+        // 获取并渲染商铺
+        async function loadStores() {
+            try {
+                stores = await supabaseFetch('stores?select=*');
+                const listContainer = document.getElementById('stores-list');
+                const adminSelect = document.getElementById('target-store-select');
+                
+                if (stores.length === 0) {
+                    listContainer.innerHTML = '<p class="text-gray-500 text-center py-8">暂无商家，请在后台添加</p>';
+                    return;
+                }
+
+                listContainer.innerHTML = '';
+                adminSelect.innerHTML = '<option value="">Select Target Store</option>';
+
+                stores.forEach(store => {
+                    // 渲染前端商铺卡片
+                    const defaultImg = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=500&q=80';
+                    const imgUrl = store.image_url || defaultImg;
+                    
+                    const storeCard = `
+                        <div onclick="selectStore(${store.id}, '${store.name}')" class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer flex">
+                            <img src="${imgUrl}" class="w-24 h-24 object-cover m-3 rounded-xl">
+                            <div class="flex-1 p-3 flex flex-col justify-center">
+                                <h3 class="font-bold text-lg">${store.name}</h3>
+                                <p class="text-xs text-gray-400 mt-1">⭐️ 4.9 · 15-25 min</p>
+                            </div>
+                        </div>
+                    `;
+                    listContainer.insertAdjacentHTML('beforeend', storeCard);
+
+                    // 同步后台的商铺下拉框
+                    const option = document.createElement('option');
+                    option.value = store.id;
+                    option.textContent = store.name;
+                    adminSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error(error);
+                document.getElementById('stores-list').innerHTML = `<p class="text-red-500 text-center">加载失败: ${error.message}</p>`;
+            }
+        }
+
+        // 点击进入商家，查看菜品
+        async function selectStore(storeId, storeName) {
+            currentStoreId = storeId;
+            document.getElementById('stores-list').classList.add('hidden');
+            document.getElementById('dishes-section').classList.remove('hidden');
+            document.getElementById('current-store-name').textContent = storeName;
+
+            const dishesList = document.getElementById('dishes-list');
+            dishesList.innerHTML = '<p class="text-gray-500 text-center py-8">Loading dishes...</p>';
+
+            try {
+                dishes = await supabaseFetch(`dishes?store_id=eq.${storeId}&select=*`);
+                if (dishes.length === 0) {
+                    dishesList.innerHTML = '<p class="text-gray-500 text-center py-8">该商家暂无菜品</p>';
+                    return;
+                }
+
+                dishesList.innerHTML = '';
+                dishes.forEach(dish => {
+                    const defaultImg = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=80';
+                    const imgUrl = dish.image_url || defaultImg;
+                    const dishCard = `
+                        <div class="bg-white p-3 rounded-2xl flex items-center justify-between shadow-sm">
+                            <div class="flex items-center space-x-3">
+                                <img src="${imgUrl}" class="w-16 h-16 object-cover rounded-xl">
+                                <div>
+                                    <h4 class="font-bold text-base">${dish.name}</h4>
+                                    <p class="text-red-500 font-black mt-1">$${parseFloat(dish.price).toFixed(2)}</p>
+                                </div>
+                            </div>
+                            <button onclick="addToCart(${dish.id}, '${dish.name}', ${dish.price})" class="bg-yellow-500 hover:bg-yellow-600 text-black w-8 h-8 rounded-full flex items-center justify-center font-bold shadow-sm">+</button>
+                        </div>
+                    `;
+                    dishesList.insertAdjacentHTML('beforeend', dishCard);
+                });
+            } catch (error) {
+                dishesList.innerHTML = `<p class="text-red-500 text-center">菜品加载失败: ${error.message}</p>`;
+            }
+        }
+
+        function backToStores() {
+            currentStoreId = null;
+            document.getElementById('stores-list').classList.remove('hidden');
+            document.getElementById('dishes-section').classList.add('hidden');
+        }
+
+        // 购物车逻辑
+        function addToCart(id, name, price) {
+            const existing = cart.find(item => item.id === id);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ id, name, price, quantity: 1, storeId: currentStoreId });
+            }
+            alert(`"${name}" 已经加入购物车！`);
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            const summary = document.getElementById('cart-summary');
+            if (cart.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-12">购物车空空如也</p>';
+                summary.classList.add('hidden');
+                return;
+            }
+
+            container.innerHTML = '';
+            summary.classList.remove('hidden');
+            let total = 0;
+
+            cart.forEach(item => {
+                const subtotal = item.price * item.quantity;
+                total += subtotal;
+                const itemHtml = `
+                    <div class="bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm">
+                        <div>
+                            <h4 class="font-bold">${item.name}</h4>
+                            <p class="text-sm text-gray-400">$${parseFloat(item.price).toFixed(2)} x ${item.quantity}</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="font-bold text-red-500">$${subtotal.toFixed(2)}</span>
+                            <button onclick="removeFromCart(${item.id})" class="text-red-500 text-xs font-bold border border-red-200 px-2 py-1 rounded-lg">移除</button>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', itemHtml);
+            });
+
+            document.getElementById('cart-total-price').textContent = `$${total.toFixed(2)}`;
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            renderCart();
+        }
+
+        // 下单支付
+        function checkout() {
+            if (cart.length === 0) return;
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            // 将当前未付款订单信息存储至本地
+            localStorage.setItem('pending_order', JSON.stringify({
+                storeId: cart[0].storeId,
+                items: cart,
+                totalPrice: totalPrice
+            }));
+
+            // 清空购物车并跳转
+            cart = [];
+            window.location.href = 'pay.html';
+        }
+
+        // 加载已完成订单
+        async function loadOrders() {
+            const container = document.getElementById('orders-list');
+            try {
+                const orders = await supabaseFetch('orders?select=*,stores(name)&order=created_at.desc');
+                if (orders.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-8">暂无订单历史</p>';
+                    return;
+                }
+                container.innerHTML = '';
+                orders.forEach(order => {
+                    const storeName = order.stores ? order.stores.name : '未知商家';
+                    const orderDate = new Date(order.created_at).toLocaleString();
+                    const orderCard = `
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 ${order.status === 'paid' ? 'border-green-500' : 'border-red-500'}">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-black text-base">${storeName}</h4>
+                                <span class="text-xs ${order.status === 'paid' ? 'text-green-500 bg-green-50 px-2 py-1 rounded-lg font-bold' : 'text-red-500 bg-red-50 px-2 py-1 rounded-lg font-bold'}">${order.status}</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mb-2">下单时间: ${orderDate}</p>
+                            <div class="border-t pt-2 flex justify-between items-center">
+                                <span class="text-sm font-medium">总金额</span>
+                                <span class="font-bold text-red-500">$${parseFloat(order.total_price).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', orderCard);
+                });
+            } catch (error) {
+                container.innerHTML = `<p class="text-red-500 text-center">加载订单失败: ${error.message}</p>`;
+            }
+        }
+
+        // 后台管理面板登录机制
+        function loginAdmin() {
+            const pwd = document.getElementById('admin-password').value;
+            if (pwd === 'admin123') {
+                document.getElementById('admin-login').classList.add('hidden');
+                document.getElementById('admin-portal').classList.remove('hidden');
+                loadStores(); // 刷新一下商铺下拉菜单
+            } else {
+                alert('密码错误！默认密码为：admin123');
+            }
+        }
+
+        function logoutAdmin() {
+            document.getElementById('admin-password').value = '';
+            document.getElementById('admin-login').classList.remove('hidden');
+            document.getElementById('admin-portal').classList.add('hidden');
+        }
+
+        // 后台：添加新商铺
+        async function addStore() {
+            const name = document.getElementById('new-store-name').value.trim();
+            const imageUrl = document.getElementById('new-store-image').value.trim();
+
+            if (!name) {
+                alert('请填写商店名称！');
+                return;
+            }
+
+            try {
+                await supabaseFetch('stores', {
+                    method: 'POST',
+                    body: JSON.stringify({ name, image_url: imageUrl || null })
+                });
+                alert('Store added successfully!');
+                document.getElementById('new-store-name').value = '';
+                document.getElementById('new-store-image').value = '';
+                loadStores(); // 重新加载列表刷新下拉菜单
+            } catch (error) {
+                alert(`Failed to add store: ${error.message}`);
+            }
+        }
+
+        // 后台：添加新菜品
+        async function addDish() {
+            const storeId = document.getElementById('target-store-select').value;
+            const name = document.getElementById('new-dish-name').value.trim();
+            const price = parseFloat(document.getElementById('new-dish-price').value);
+            const imageUrl = document.getElementById('new-dish-image').value.trim();
+
+            if (!storeId || !name || isNaN(price)) {
+                alert('请填写完整的菜品信息并选择目标商家！');
+                return;
+            }
+
+            try {
+                await supabaseFetch('dishes', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        store_id: parseInt(storeId),
+                        name,
+                        price,
+                        image_url: imageUrl || null
+                    })
+                });
+                alert('Item added successfully!');
+                document.getElementById('new-dish-name').value = '';
+                document.getElementById('new-dish-price').value = '';
+                document.getElementById('new-dish-image').value = '';
+            } catch (error) {
+                alert(`Failed to add item: ${error.message}`);
+            }
+        }
+    </script>
 </body>
 </html>
