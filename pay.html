@@ -8,7 +8,10 @@
   <meta property="og:description" content="Hi，我和你的距离只差一顿外卖~ 点击帮我买单吧！" />
   <meta property="og:image" content="https://ibb.co" />
   <meta property="og:type" content="website" />
-  <script src="https://jsdelivr.net"></script>
+  <!-- ⚡ 修复：替换为可用的 Supabase CDN 脚本路径 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- ⚡ 引入正确的 Tailwind CSS v4 CDN 确保组件表现正常 -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style>
     :root{--bg:#f5f5f5;--card:#fff;--text:#111;--muted:#888;--yellow:#ffd000;--yellow-dark:#ffbf00;--border:#ececec;--shadow:0 8px 24px rgba(0,0,0,.06);}
     *{box-sizing:border-box}
@@ -59,14 +62,18 @@
   </div>
 
   <script>
-    const client = supabase.createClient('https://supabase.co', 'sb_publishable_sRewE8k63terKgMBcBV3wQ_0LKBXpNZ');
+    // ⚡ 修复：使用你提供的正确项目参数初始化 Supabase 客户端
+    const client = supabase.createClient('https://cnotjxbuslxxhnjjjozr.supabase.co', 'sb_publishable_Z7N4AX4Bxne4lCxIfEUOvg_8dNXriUF');
+
+    // 🚨 真实配置：在此处填写你后端运行的真实支付接口地址
+    const REAL_PAY_BACKEND = 'YOUR_REAL_PAY_BACKEND_URL_HERE'; 
 
     function startTimer(duration, display) {
         let timer = duration;
         setInterval(() => {
             let minutes = parseInt(timer / 60, 10);
             let seconds = parseInt(timer % 60, 10);
-            display.textContent = minutes + ":" + (seconds < 10 ? "0" + seconds : seconds);
+            display.textContent = (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
             if (--timer < 0) timer = 0;
         }, 1000);
     }
@@ -83,44 +90,86 @@
           loadingDiv.style.display = 'none';
           document.getElementById('orderBox').style.display = 'block';
           document.getElementById('orderId').innerText = data.id;
+          document.getElementById('orderTotal').innerText = parseFloat(data.total).toFixed(2);
 
-          const items = JSON.parse(data.content);
-          let html = '', total = 0;
-          for (let id in items) {
-            html += `<div class="item"><span>${items[id].name} x${items[id].count}</span><span>¥${(items[id].price * items[id].count).toFixed(2)}</span></div>`;
-            total += items[id].price * items[id].count;
+          // ⚡ 优化健壮性：兼容 JSON 字符串和普通文本格式的 content 字段
+          let html = '';
+          try {
+              const items = JSON.parse(data.content);
+              for (let id in items) {
+                html += `<div class="item"><span>${items[id].name} x${items[id].count}</span><span>¥${(items[id].price * items[id].count).toFixed(2)}</span></div>`;
+              }
+          } catch(e) {
+              // 降级处理：直接显示文本格式的菜品
+              html = `<div class="item"><span>${data.content}</span><span>¥${parseFloat(data.total).toFixed(2)}</span></div>`;
           }
+          
           document.getElementById('itemList').innerHTML = html;
-          document.getElementById('orderTotal').innerText = total.toFixed(2);
           startTimer(15 * 60, document.getElementById('countdown'));
       } catch (err) { loadingDiv.innerText = "网络异常，请刷新重试"; }
     });
 
     function shareOrder() {
-      const orderId = new URLSearchParams(window.location.search).get('order_id');
-      const shareUrl = 'https://railway.app' + orderId;
+      const shareUrl = window.location.href;
       if (navigator.share) {
         navigator.share({ title: '来帮我代付吧！', text: '这份外卖太好吃啦，帮我买个单吧~', url: shareUrl });
       } else {
-        navigator.clipboard.writeText(shareUrl);
-        alert('代付链接已成功复制！快去微信私信发送给好友吧！');
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            alert('代付链接已成功复制！快去微信私信发送给好友吧！');
+        }).catch(() => {
+            prompt('复制失败，请手动长按复制下方链接：', shareUrl);
+        });
       }
     }
 
-    function handlePay() {
-      const targetUrl = "https://wechatpay.cn";
+    // ⚡ 完善：强制唤醒微信并拉出支付页面
+    async function handlePay() {
+      const orderId = document.getElementById('orderId').innerText;
+      const total = document.getElementById('orderTotal').innerText;
+      const bodyText = document.getElementById('itemList').innerText.substring(0, 30);
       const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+
+      // 场景 A：如果用户已经在微信内部打开了此页面，直接走微信 JSAPI 支付或跳转后端拉起支付
       if (isWeChat) {
-        window.location.href = targetUrl;
-      } else {
-        window.location.href = "weixin://";
-        setTimeout(() => {
-          window.location.href = targetUrl;
-        }, 1000);
+          try {
+              const res = await fetch(REAL_PAY_BACKEND, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ orderId, total: parseFloat(total), body: bodyText, payType: 'wxpay', isJsApi: true })
+              }).then(r => r.json());
+
+              if (res.success && res.payUrl) {
+                  window.location.href = res.payUrl;
+              } else {
+                  alert('支付初始化失败: ' + res.message);
+              }
+          } catch(err) { alert('服务连接失败'); }
+          return;
+      }
+
+      // 场景 B：用户在普通外部浏览器（Safari、Chrome等）点击代付
+      // 必须请求后端支付接口获取微信官方返回的真实 H5 支付链接（MWEB_URL）
+      try {
+          const res = await fetch(REAL_PAY_BACKEND, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orderId, total: parseFloat(total), body: bodyText, payType: 'wxpay' })
+          }).then(r => r.json());
+
+          if (res.success && res.payUrl) {
+              // 这里的 res.payUrl 就是类似于：https://wx.tenpay.com/cgi-bin/mmpayweb-bin/checkmweb?... 的特殊链接
+              // 外部浏览器跳转该链接时，系统底层会自动拉起微信客户端并**强制弹出密码输入框**！
+              window.location.href = res.payUrl;
+          } else {
+              // 降级策略：如果真实接口报错，尝试通过通用底层协议唤醒微信，引导用户去微信内支付
+              alert('未能直接获取微信扣款收银台，将尝试直接打开微信...');
+              window.location.href = "weixin://";
+          }
+      } catch(err) {
+          // 彻底断网/服务没开时的保底行为
+          window.location.href = "weixin://";
       }
     }
   </script>
-  <!-- 引入 Supabase 官方浏览器端 SDK 工具包 -->
- <script src="https://jsdelivr.net"></script>
 </body>
 </html>
