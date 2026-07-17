@@ -90,8 +90,9 @@
     </main>
 
     <script>
-        const SUPABASE_URL = 'https://supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5cXVmcnFpd2NzeHd6Ymh5Z25yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxNjI4MTgsImV4cCI6MjA5OTczODgxOH0.ElVeaTZzSrlWC5v7j9HJNzwe7ZoVW2NPmSHhIOmBtUI';
+        // ✨ 已完美适配你最新的新版端点和密钥
+        const SUPABASE_URL = 'https://cnotjxbuslxxhnjjjozr.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_Z7N4AX4Bxne4lCxIfEUOvg_8dNXriUF';
 
         async function supabaseFetch(path, options = {}) {
             const url = `${SUPABASE_URL}/rest/v1/${path}`;
@@ -177,7 +178,7 @@
                     method: 'POST',
                     body: JSON.stringify({ name: storeName })
                 });
-                alert(`🎉 上架成功！店铺 [${storeName}] 已成功录入数据库！`);
+                alert(`🎉 上架成功！店铺 [${storeName}] 已成功录入新数据库！`);
                 document.getElementById('new-store-name').value = '';
                 loadStores();
             } catch (err) { alert('添加商家失败: ' + err.message); }
