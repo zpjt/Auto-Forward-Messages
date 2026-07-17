@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Food Delivery System | Cart & Merchant Management</title>
+<title>Food Delivery System | Cart & Merchant</title>
 <style>
 :root{--bg:#f5f5f5;--card:#fff;--text:#111;--muted:#8a8a8a;--primary:#ffd000;--primary-dark:#ffbf00;--danger:#ff4d4f;--success:#00b578;--border:#ececec;--shadow:0 8px 24px rgba(0,0,0,.06);}
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
 .nav{display:flex;gap:10px;padding:14px 12px;background:linear-gradient(135deg,#111,#2b2b2b);position:sticky;top:0;z-index:10;overflow:auto}
 .nav-item{padding:10px 14px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,.08);color:#fff;font-weight:700;white-space:nowrap}
 .nav-item.active{background:var(--primary);color:#111}
@@ -15,14 +15,12 @@ body{margin:0;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;backg
 .tab-view.active{display:block}
 h2{margin:8px 0 14px;font-size:22px;font-weight:800}
 .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 input,select{padding:12px 14px;border:1px solid #ddd;border-radius:14px;background:#fff;outline:none;width:100%;margin-bottom:10px;}
 .btn{padding:10px 14px;border:0;border-radius:14px;cursor:pointer;font-weight:700}
 .p{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#111;width:100%}
 .btn-danger { background: var(--danger); color: #fff; padding: 6px 12px; border-radius: 8px; }
 .muted{color:var(--muted); text-align:center; padding: 20px 0;}
 .dish-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid #f9f9f9; }
-.admin-section { margin-top: 30px; border-top: 2px dashed #ccc; padding-top: 20px; }
 </style>
 </head>
 <body>
@@ -69,25 +67,27 @@ input,select{padding:12px 14px;border:1px solid #ddd;border-radius:14px;backgrou
   <div id="admin-content" style="display:none;">
     <div class="card">
       <h3>Add New Store</h3>
-      <input type="text" id="new-store-name" placeholder="e.g., McDonald's (Downtown)" />
+      <input type="text" id="new-store-name" placeholder="Store Name (e.g., McDonald's)" />
+      <!-- 新增：店铺图片链接输入框 -->
+      <input type="text" id="new-store-image" placeholder="Store Image URL (Optional, e.g., https://...)" />
       <button class="btn p" onclick="addStore()">Add Store</button>
     </div>
     <div class="card">
       <h3>Add New Item to Store</h3>
       <label>Select Target Store:</label>
       <select id="select-store-id" style="margin-top:5px;"></select>
-      <input type="text" id="new-dish-name" placeholder="e.g., Double Cheeseburger Meal" />
+      <input type="text" id="new-dish-name" placeholder="Dish Name (e.g., Cheeseburger)" />
       <input type="number" step="0.01" id="new-dish-price" placeholder="Price ($) e.g., 9.99" />
+      <!-- 新增：菜品图片链接输入框 -->
+      <input type="text" id="new-dish-image" placeholder="Dish Image URL (Optional, e.g., https://...)" />
       <button class="btn p" onclick="addDish()">Add Item</button>
     </div>
   </div>
 </div>
 
-<!-- Load Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-// Corrected Supabase configuration
 const SUPABASE_URL = 'https://qyqufrqiwcsxwzbygnr.supabase.co'; 
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5cXVmcnFpd2NzeHd6Ymh5Z25yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxNjI4MTgsImV4cCI6MjA5OTczODgxOH0.ElVeaTZzSrlWC5v7j9HJNzwe7ZoVW2NPmSHhIOmBtUI';
 
@@ -101,11 +101,8 @@ try {
 let cart = {};
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (client) {
-    loadStores();
-  }
+  if (client) loadStores();
   
-  // Tab switching control
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -113,14 +110,11 @@ document.addEventListener('DOMContentLoaded', () => {
       item.classList.add('active');
       document.getElementById(item.getAttribute('data-tab')).classList.add('active');
       
-      if(item.getAttribute('data-tab') === 'view-orders') {
-        loadOrders();
-      }
+      if(item.getAttribute('data-tab') === 'view-orders') loadOrders();
     });
   });
 });
 
-// Admin verification
 function verifyAdmin() {
   const pass = document.getElementById('admin-pass').value;
   if(pass === 'admin123') { 
@@ -132,42 +126,49 @@ function verifyAdmin() {
   }
 }
 
-// Render stores and their products
 async function loadStores() {
   try {
-    const { data: stores, error: sError } = await client.from('stores').select('*').order('id', { ascending: false });
-    const { data: dishes, error: dError } = await client.from('dishes').select('*');
-    
-    if (sError || dError) {
-      console.error("Failed to load data. Please check table existence and RLS policies:", sError, dError);
-    }
-
+    const { data: stores } = await client.from('stores').select('*').order('id', { ascending: false });
+    const { data: dishes } = await client.from('dishes').select('*');
     const storeListEl = document.getElementById('store-list');
     
     if(!stores || stores.length === 0) {
-      storeListEl.innerHTML = '<div class="muted">No stores available. Please go to the Admin tab to add one (Password: admin123)</div>';
+      storeListEl.innerHTML = '<div class="muted">No stores available. Please go to Admin tab to add one.</div>';
       return;
     }
 
     let html = '';
     stores.forEach(store => {
-      html += `<div class="card" style="border-left: 5px solid var(--primary);"><b style="font-size:18px;">🏪 ${store.name}</b><div style="margin-top:8px;">`;
+      // 渲染店铺图片
+      const storeImg = store.image_url ? `<img src="${store.image_url}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;margin-right:12px;">` : '';
+      
+      html += `<div class="card" style="border-left: 5px solid var(--primary);">
+        <div style="display:flex; align-items:center; margin-bottom: 10px;">
+          ${storeImg}
+          <b style="font-size:18px;">🏪 ${store.name}</b>
+        </div>
+        <div>`;
       
       const storeDishes = dishes ? dishes.filter(d => d.store_id === store.id) : [];
       if(storeDishes.length === 0) {
         html += `<div style="color:#aaa; font-size:13px; padding:10px 0;">No items available in this store...</div>`;
       } else {
         storeDishes.forEach(dish => {
-          html += `<div class="dish-item">
-            <div>
-              <div style="font-weight:bold;">${dish.name}</div>
-              <div style="color:var(--danger); font-size:14px; margin-top:2px;">$ ${parseFloat(dish.price).toFixed(2)}</div>
+          // 渲染菜品图片
+          const dishImg = dish.image_url ? `<img src="${dish.image_url}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;margin-right:12px;">` : '';
+          
+          html += `<div class="dish-item" style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center;">
+              ${dishImg}
+              <div>
+                <div style="font-weight:bold;">${dish.name}</div>
+                <div style="color:var(--danger); font-size:14px; margin-top:4px;">$ ${parseFloat(dish.price).toFixed(2)}</div>
+              </div>
             </div>
             <button class="btn p" style="width:auto; padding:6px 14px; border-radius:10px;" onclick="addToCart('${dish.id}', '${dish.name}', ${dish.price})">Add 🛒</button>
           </div>`;
         });
       }
-      
       html += `</div></div>`;
     });
     storeListEl.innerHTML = html;
@@ -176,18 +177,13 @@ async function loadStores() {
   }
 }
 
-// Add to cart
 function addToCart(id, name, price) {
-  if (cart[id]) {
-    cart[id].count++;
-  } else {
-    cart[id] = { name, price, count: 1 };
-  }
+  if (cart[id]) cart[id].count++;
+  else cart[id] = { name, price, count: 1 };
   renderCart();
   if(navigator.vibrate) navigator.vibrate(50);
 }
 
-// Render cart view
 function renderCart() {
   let total = 0, count = 0, html = '';
   for (let id in cart) {
@@ -210,7 +206,6 @@ function renderCart() {
   document.getElementById('cart-list').innerHTML = count > 0 ? html : '<div class="muted">Your cart is empty. Go add some delicious food!</div>';
 }
 
-// Decrease quantity or remove from cart
 function removeFromCart(id) {
   if (cart[id]) {
     cart[id].count--;
@@ -219,35 +214,23 @@ function removeFromCart(id) {
   renderCart();
 }
 
-// Submit order
 async function checkout() {
   if (Object.keys(cart).length === 0) return alert('Please select your items first!');
   
   let totalAmount = 0;
-  for(let key in cart) {
-    totalAmount += cart[key].price * cart[key].count;
-  }
+  for(let key in cart) totalAmount += cart[key].price * cart[key].count;
 
   const { data, error } = await client.from('orders').insert([
-    { 
-      content: JSON.stringify(cart),
-      total: totalAmount,
-      status: 'Pending'
-    }
+    { content: JSON.stringify(cart), total: totalAmount, status: 'Pending' }
   ]).select();
 
-  if (error) {
-    return alert('Failed to submit order: ' + error.message);
-  }
+  if (error) return alert('Failed to submit order: ' + error.message);
   
   cart = {};
   renderCart();
-  
-  // Redirect to payment page
   window.location.href = 'pay.html?order_id=' + data[0].id;
 }
 
-// Load order history
 async function loadOrders() {
   const { data: orders } = await client.from('orders').select('*').order('id', { ascending: false }).limit(10);
   if(orders && orders.length > 0) {
@@ -265,23 +248,24 @@ async function loadOrders() {
   }
 }
 
-// Admin Panel Database Logic
 async function updateAdminStoreSelect() {
   const { data: stores } = await client.from('stores').select('*');
   const select = document.getElementById('select-store-id');
-  if(stores) {
-    select.innerHTML = stores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-  }
+  if(stores) select.innerHTML = stores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
 }
 
 async function addStore() {
   const name = document.getElementById('new-store-name').value.trim();
+  const image_url = document.getElementById('new-store-image').value.trim();
+  
   if(!name) return alert('Please enter a store name!');
-  const { error } = await client.from('stores').insert([{ name }]);
+  
+  const { error } = await client.from('stores').insert([{ name, image_url }]);
   if(error) alert('Failed to add store: ' + error.message);
   else {
     alert('Store added successfully!');
     document.getElementById('new-store-name').value = '';
+    document.getElementById('new-store-image').value = '';
     loadStores();
     updateAdminStoreSelect();
   }
@@ -291,19 +275,20 @@ async function addDish() {
   const storeId = document.getElementById('select-store-id').value;
   const name = document.getElementById('new-dish-name').value.trim();
   const price = parseFloat(document.getElementById('new-dish-price').value);
+  const image_url = document.getElementById('new-dish-image').value.trim();
   
-  if(!storeId || !name || isNaN(price)) return alert('Please make sure a store is selected and both name and price are valid!');
+  if(!storeId || !name || isNaN(price)) return alert('Please check inputs: store, name, and valid price are required!');
   
-  const { error } = await client.from('dishes').insert([{ store_id: parseInt(storeId), name, price }]);
+  const { error } = await client.from('dishes').insert([{ store_id: parseInt(storeId), name, price, image_url }]);
   if(error) alert('Failed to add item: ' + error.message);
   else {
     alert('Item added successfully!');
     document.getElementById('new-dish-name').value = '';
     document.getElementById('new-dish-price').value = '';
+    document.getElementById('new-dish-image').value = '';
     loadStores();
   }
 }
 </script>
 </body>
 </html>
-
