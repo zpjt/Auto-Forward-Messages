@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>外卖点单系统</title>
-    <!-- 引入 Tailwind CSS 进行美化 -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://tailwindcss.com"></script>
     <style>
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -13,7 +12,6 @@
 </head>
 <body class="bg-gray-100 min-h-screen pb-24">
 
-    <!-- 导航栏 -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="max-w-md mx-auto px-4 flex justify-around py-3">
             <button onclick="switchTab('stores')" id="tab-stores" class="font-bold text-yellow-500 border-b-2 border-yellow-500 pb-1">Stores</button>
@@ -23,16 +21,13 @@
         </div>
     </nav>
 
-    <!-- 主体内容 -->
     <main class="max-w-md mx-auto px-4 py-6">
         
-        <!-- Stores 页面 -->
         <div id="content-stores" class="tab-content active">
             <h1 class="text-2xl font-black mb-6">Explore Restaurants</h1>
             <div id="stores-list" class="space-y-4">
                 <p class="text-gray-500 text-center py-8">Loading restaurants...</p>
             </div>
-            <!-- 菜品列表容器 (点击店铺后显示) -->
             <div id="dishes-section" class="hidden mt-8">
                 <button onclick="backToStores()" class="mb-4 text-sm font-bold text-yellow-600 flex items-center">← Back to Restaurants</button>
                 <h2 id="current-store-name" class="text-2xl font-black mb-4">Store Name</h2>
@@ -40,7 +35,6 @@
             </div>
         </div>
 
-        <!-- Cart 页面 -->
         <div id="content-cart" class="tab-content">
             <h1 class="text-2xl font-black mb-6">Your Cart</h1>
             <div id="cart-items" class="space-y-4"></div>
@@ -55,7 +49,6 @@
             </div>
         </div>
 
-        <!-- Orders 页面 -->
         <div id="content-orders" class="tab-content">
             <h1 class="text-2xl font-black mb-6">Your Orders</h1>
             <div id="orders-list" class="space-y-4">
@@ -63,31 +56,25 @@
             </div>
         </div>
 
-        <!-- Admin 页面 -->
         <div id="content-admin" class="tab-content">
-            <!-- 登录表单 -->
             <div id="admin-login" class="bg-white p-6 rounded-2xl shadow-sm">
                 <h2 class="text-xl font-black mb-4">Admin Login</h2>
                 <input type="password" id="admin-password" placeholder="Enter admin password" class="w-full border border-gray-300 p-4 rounded-2xl mb-4 focus:ring-2 focus:ring-yellow-500 outline-none">
                 <button onclick="loginAdmin()" class="w-full bg-black text-white font-black py-4 rounded-2xl">Login</button>
             </div>
 
-            <!-- 管理面板 -->
             <div id="admin-portal" class="hidden space-y-6">
                 <div class="flex justify-between items-center">
                     <h2 class="text-xl font-black">Admin Portal</h2>
                     <button onclick="logoutAdmin()" class="text-sm text-red-500 font-bold">Logout</button>
                 </div>
 
-                <!-- 添加店铺 -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
                     <h3 class="font-bold text-lg">Add New Store</h3>
                     <input type="text" id="new-store-name" placeholder="Store Name" class="w-full border p-3 rounded-xl outline-none">
-                    <input type="text" id="new-store-image" placeholder="Store Image URL (Optional)" class="w-full border p-3 rounded-xl outline-none">
                     <button onclick="addStore()" class="w-full bg-yellow-500 font-bold py-3 rounded-xl">Add Store</button>
                 </div>
 
-                <!-- 添加菜品 -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
                     <h3 class="font-bold text-lg">Add New Item to Store</h3>
                     <select id="target-store-select" class="w-full border p-3 rounded-xl outline-none">
@@ -95,7 +82,6 @@
                     </select>
                     <input type="text" id="new-dish-name" placeholder="Dish Name" class="w-full border p-3 rounded-xl outline-none">
                     <input type="number" step="0.01" id="new-dish-price" placeholder="Price ($)" class="w-full border p-3 rounded-xl outline-none">
-                    <input type="text" id="new-dish-image" placeholder="Dish Image URL (Optional)" class="w-full border p-3 rounded-xl outline-none">
                     <button onclick="addDish()" class="w-full bg-yellow-500 font-bold py-3 rounded-xl">Add Item</button>
                 </div>
             </div>
@@ -103,13 +89,10 @@
 
     </main>
 
-    <!-- JS 逻辑部分 -->
     <script>
-        // Supabase 配置
-        const SUPABASE_URL = 'https://qyqufrqiwcsxwzbygnr.supabase.co';
-        const SUPABASE_KEY = 'Sb_publishable_Blg1p2gwATV6FR7ha8Wt3A_Y_MB7I4y';
+        const SUPABASE_URL = 'https://supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5cXVmcnFpd2NzeHd6Ymh5Z25yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxNjI4MTgsImV4cCI6MjA5OTczODgxOH0.ElVeaTZzSrlWC5v7j9HJNzwe7ZoVW2NPmSHhIOmBtUI';
 
-        // 统一的数据请求发送封装（原生 fetch，彻底避免库不兼容问题）
         async function supabaseFetch(path, options = {}) {
             const url = `${SUPABASE_URL}/rest/v1/${path}`;
             const headers = {
@@ -119,7 +102,6 @@
                 'Prefer': 'return=representation',
                 ...options.headers
             };
-
             const response = await fetch(url, { ...options, headers });
             if (!response.ok) {
                 const errText = await response.text();
@@ -128,22 +110,18 @@
             return response.json();
         }
 
-        // 状态管理
         let stores = [];
         let dishes = [];
         let cart = [];
         let currentStoreId = null;
 
-        // 页面初始化加载
         window.addEventListener('DOMContentLoaded', () => {
             loadStores();
         });
 
-        // 标签切换
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(`content-${tabId}`).classList.add('active');
-
             document.querySelectorAll('nav button').forEach(el => {
                 el.classList.remove('text-yellow-500', 'border-b-2', 'border-yellow-500');
                 el.classList.add('text-gray-500');
@@ -161,8 +139,6 @@
                 loadOrders();
             }
         }
-
-        // 获取并渲染商铺
         async function loadStores() {
             try {
                 stores = await supabaseFetch('stores?select=*');
@@ -170,258 +146,168 @@
                 const adminSelect = document.getElementById('target-store-select');
                 
                 if (stores.length === 0) {
-                    listContainer.innerHTML = '<p class="text-gray-500 text-center py-8">暂无商家，请在后台添加</p>';
+                    listContainer.innerHTML = '<p class="text-gray-500 text-center py-8">没有找到任何店铺。</p>';
                     return;
                 }
-
-                listContainer.innerHTML = '';
-                adminSelect.innerHTML = '<option value="">Select Target Store</option>';
-
-                stores.forEach(store => {
-                    // 渲染前端商铺卡片
-                    const defaultImg = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=500&q=80';
-                    const imgUrl = store.image_url || defaultImg;
-                    
-                    const storeCard = `
-                        <div onclick="selectStore(${store.id}, '${store.name}')" class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer flex">
-                            <img src="${imgUrl}" class="w-24 h-24 object-cover m-3 rounded-xl">
-                            <div class="flex-1 p-3 flex flex-col justify-center">
-                                <h3 class="font-bold text-lg">${store.name}</h3>
-                                <p class="text-xs text-gray-400 mt-1">⭐️ 4.9 · 15-25 min</p>
-                            </div>
+                listContainer.innerHTML = stores.map(store => `
+                    <div onclick="showStoreDishes(${store.id}, '${store.name}')" class="bg-white p-4 rounded-2xl shadow-sm flex items-center space-x-4 cursor-pointer">
+                        <div class="w-16 h-16 bg-gray-200 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-gray-400">店</div>
+                        <div>
+                            <h3 class="font-black text-lg">${store.name}</h3>
+                            <p class="text-gray-400 text-sm">点击探索美味</p>
                         </div>
-                    `;
-                    listContainer.insertAdjacentHTML('beforeend', storeCard);
+                    </div>
+                `).join('');
 
-                    // 同步后台的商铺下拉框
-                    const option = document.createElement('option');
-                    option.value = store.id;
-                    option.textContent = store.name;
-                    adminSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error(error);
-                document.getElementById('stores-list').innerHTML = `<p class="text-red-500 text-center">加载失败: ${error.message}</p>`;
+                if (adminSelect) {
+                    adminSelect.innerHTML = '<option value="">Select Target Store</option>' + stores.map(store => `
+                        <option value="${store.id}">${store.name}</option>
+                    `).join('');
+                }
+            } catch (err) {
+                document.getElementById('stores-list').innerHTML = `<p class="text-red-500 text-center py-8">获取店铺失败: ${err.message}</p>`;
             }
         }
 
-        // 点击进入商家，查看菜品
-        async function selectStore(storeId, storeName) {
+        async function addStore() {
+            const storeName = document.getElementById('new-store-name').value;
+            if (!storeName) { alert('请输入店铺名称！'); return; }
+            try {
+                await supabaseFetch('stores', {
+                    method: 'POST',
+                    body: JSON.stringify({ name: storeName })
+                });
+                alert(`🎉 上架成功！店铺 [${storeName}] 已成功录入数据库！`);
+                document.getElementById('new-store-name').value = '';
+                loadStores();
+            } catch (err) { alert('添加商家失败: ' + err.message); }
+        }
+
+        async function showStoreDishes(storeId, storeName) {
             currentStoreId = storeId;
             document.getElementById('stores-list').classList.add('hidden');
             document.getElementById('dishes-section').classList.remove('hidden');
-            document.getElementById('current-store-name').textContent = storeName;
-
+            document.getElementById('current-store-name').innerText = storeName;
             const dishesList = document.getElementById('dishes-list');
-            dishesList.innerHTML = '<p class="text-gray-500 text-center py-8">Loading dishes...</p>';
-
+            dishesList.innerHTML = '<p class="text-gray-500 text-center py-8">Loading...</p>';
             try {
                 dishes = await supabaseFetch(`dishes?store_id=eq.${storeId}&select=*`);
                 if (dishes.length === 0) {
-                    dishesList.innerHTML = '<p class="text-gray-500 text-center py-8">该商家暂无菜品</p>';
+                    dishesList.innerHTML = '<p class="text-gray-500 text-center py-8">该店铺暂无商品上架。</p>';
                     return;
                 }
-
-                dishesList.innerHTML = '';
-                dishes.forEach(dish => {
-                    const defaultImg = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=80';
-                    const imgUrl = dish.image_url || defaultImg;
-                    const dishCard = `
-                        <div class="bg-white p-3 rounded-2xl flex items-center justify-between shadow-sm">
-                            <div class="flex items-center space-x-3">
-                                <img src="${imgUrl}" class="w-16 h-16 object-cover rounded-xl">
-                                <div>
-                                    <h4 class="font-bold text-base">${dish.name}</h4>
-                                    <p class="text-red-500 font-black mt-1">$${parseFloat(dish.price).toFixed(2)}</p>
-                                </div>
-                            </div>
-                            <button onclick="addToCart(${dish.id}, '${dish.name}', ${dish.price})" class="bg-yellow-500 hover:bg-yellow-600 text-black w-8 h-8 rounded-full flex items-center justify-center font-bold shadow-sm">+</button>
+                dishesList.innerHTML = dishes.map(dish => `
+                    <div class="bg-white p-4 rounded-2xl shadow-sm flex items-center justify-between">
+                        <div>
+                            <h3 class="font-black text-base">${dish.name}</h3>
+                            <p class="text-red-500 font-bold mt-1">$${parseFloat(dish.price).toFixed(2)}</p>
                         </div>
-                    `;
-                    dishesList.insertAdjacentHTML('beforeend', dishCard);
-                });
-            } catch (error) {
-                dishesList.innerHTML = `<p class="text-red-500 text-center">菜品加载失败: ${error.message}</p>`;
-            }
+                        <button onclick="addToCart(${dish.id}, '${dish.name}', ${dish.price})" class="bg-yellow-500 text-black font-black px-4 py-2 rounded-xl text-sm shadow-sm">＋ Add</button>
+                    </div>
+                `).join('');
+            } catch (err) { dishesList.innerHTML = `<p class="text-red-500 text-center py-8">失败: ${err.message}</p>`; }
         }
 
         function backToStores() {
             currentStoreId = null;
-            document.getElementById('stores-list').classList.remove('hidden');
             document.getElementById('dishes-section').classList.add('hidden');
+            document.getElementById('stores-list').classList.remove('hidden');
         }
 
-        // 购物车逻辑
-        function addToCart(id, name, price) {
-            const existing = cart.find(item => item.id === id);
-            if (existing) {
-                existing.quantity += 1;
-            } else {
-                cart.push({ id, name, price, quantity: 1, storeId: currentStoreId });
-            }
-            alert(`"${name}" 已经加入购物车！`);
+        function addToCart(dishId, dishName, price) {
+            const item = cart.find(i => i.dishId === dishId);
+            if (item) { item.quantity += 1; } else { cart.push({ dishId, dishName, price, quantity: 1 }); }
+            alert(`已加入购物车！`);
         }
 
         function renderCart() {
-            const container = document.getElementById('cart-items');
-            const summary = document.getElementById('cart-summary');
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartSummary = document.getElementById('cart-summary');
             if (cart.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-12">购物车空空如也</p>';
-                summary.classList.add('hidden');
+                cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center py-8">Your cart is empty.</p>';
+                cartSummary.classList.add('hidden');
                 return;
             }
-
-            container.innerHTML = '';
-            summary.classList.remove('hidden');
+            cartSummary.classList.remove('hidden');
             let total = 0;
-
-            cart.forEach(item => {
-                const subtotal = item.price * item.quantity;
-                total += subtotal;
-                const itemHtml = `
-                    <div class="bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm">
-                        <div>
-                            <h4 class="font-bold">${item.name}</h4>
-                            <p class="text-sm text-gray-400">$${parseFloat(item.price).toFixed(2)} x ${item.quantity}</p>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <span class="font-bold text-red-500">$${subtotal.toFixed(2)}</span>
-                            <button onclick="removeFromCart(${item.id})" class="text-red-500 text-xs font-bold border border-red-200 px-2 py-1 rounded-lg">移除</button>
-                        </div>
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', itemHtml);
-            });
-
-            document.getElementById('cart-total-price').textContent = `$${total.toFixed(2)}`;
+            cartItemsContainer.innerHTML = cart.map(item => {
+                total += item.price * item.quantity;
+                return `<div class="bg-white p-4 rounded-2xl shadow-sm flex justify-between items-center">
+                    <div><h3 class="font-black text-base">${item.dishName}</h3><p class="text-gray-400 text-xs">$${parseFloat(item.price).toFixed(2)} × ${item.quantity}</p></div>
+                    <span class="font-bold text-gray-800">$${(item.price * item.quantity).toFixed(2)}</span>
+                </div>`;
+            }).join('');
+            document.getElementById('cart-total-price').innerText = `$${total.toFixed(2)}`;
         }
 
-        function removeFromCart(id) {
-            cart = cart.filter(item => item.id !== id);
-            renderCart();
-        }
-
-        // 下单支付
-        function checkout() {
+        async function checkout() {
             if (cart.length === 0) return;
-            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            // 将当前未付款订单信息存储至本地
-            localStorage.setItem('pending_order', JSON.stringify({
-                storeId: cart[0].storeId,
-                items: cart,
-                totalPrice: totalPrice
-            }));
-
-            // 清空购物车并跳转
-            cart = [];
-            window.location.href = 'pay.html';
+            let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            let contentString = cart.map(item => `${item.dishName}x${item.quantity}`).join(', ');
+            try {
+                await supabaseFetch('orders', {
+                    method: 'POST',
+                    body: JSON.stringify({ content: contentString, total: total, status: '待支付' })
+                });
+                alert('订单创建成功！');
+                cart = [];
+                switchTab('orders');
+            } catch (err) { alert('下单失败: ' + err.message); }
         }
 
-        // 加载已完成订单
         async function loadOrders() {
-            const container = document.getElementById('orders-list');
+            const ordersList = document.getElementById('orders-list');
+            ordersList.innerHTML = '<p class="text-gray-500 text-center py-8">Loading...</p>';
             try {
-                const orders = await supabaseFetch('orders?select=*,stores(name)&order=created_at.desc');
+                const orders = await supabaseFetch('orders?select=*&order=id.desc');
                 if (orders.length === 0) {
-                    container.innerHTML = '<p class="text-gray-500 text-center py-8">暂无订单历史</p>';
+                    ordersList.innerHTML = '<p class="text-gray-500 text-center py-8">No orders yet.</p>';
                     return;
                 }
-                container.innerHTML = '';
-                orders.forEach(order => {
-                    const storeName = order.stores ? order.stores.name : '未知商家';
-                    const orderDate = new Date(order.created_at).toLocaleString();
-                    const orderCard = `
-                        <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 ${order.status === 'paid' ? 'border-green-500' : 'border-red-500'}">
-                            <div class="flex justify-between items-center mb-2">
-                                <h4 class="font-black text-base">${storeName}</h4>
-                                <span class="text-xs ${order.status === 'paid' ? 'text-green-500 bg-green-50 px-2 py-1 rounded-lg font-bold' : 'text-red-500 bg-red-50 px-2 py-1 rounded-lg font-bold'}">${order.status}</span>
-                            </div>
-                            <p class="text-xs text-gray-400 mb-2">下单时间: ${orderDate}</p>
-                            <div class="border-t pt-2 flex justify-between items-center">
-                                <span class="text-sm font-medium">总金额</span>
-                                <span class="font-bold text-red-500">$${parseFloat(order.total_price).toFixed(2)}</span>
-                            </div>
+                ordersList.innerHTML = orders.map(order => `
+                    <div class="bg-white p-5 rounded-2xl shadow-sm space-y-3">
+                        <div class="flex justify-between items-center border-b pb-2 border-gray-100">
+                            <span class="text-xs text-gray-400">ID: #${order.id}</span>
+                            <span class="px-2 py-1 text-xs font-black rounded-lg ${order.status === '已支付' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}">${order.status}</span>
                         </div>
-                    `;
-                    container.insertAdjacentHTML('beforeend', orderCard);
-                });
-            } catch (error) {
-                container.innerHTML = `<p class="text-red-500 text-center">加载订单失败: ${error.message}</p>`;
-            }
+                        <p class="text-gray-800 font-bold text-sm">${order.content}</p>
+                        <div class="flex justify-between items-center pt-1">
+                            <span class="text-xs text-gray-400">${new Date(order.created_at).toLocaleString()}</span>
+                            <span class="text-lg font-black text-red-500">$${parseFloat(order.total).toFixed(2)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) { ordersList.innerHTML = `<p class="text-red-500 text-center py-8">失败: ${err.message}</p>`; }
         }
 
-        // 后台管理面板登录机制
+        async function addDish() {
+            const storeId = document.getElementById('target-store-select').value;
+            const dishName = document.getElementById('new-dish-name').value;
+            const dishPrice = document.getElementById('new-dish-price').value;
+            if (!storeId || !dishName || !dishPrice) { alert('请填写完整信息！'); return; }
+            try {
+                await supabaseFetch('dishes', {
+                    method: 'POST',
+                    body: JSON.stringify({ store_id: parseInt(storeId), name: dishName, price: parseFloat(dishPrice) })
+                });
+                alert(`🎉 菜品 [${dishName}] 已成功添加！`);
+                document.getElementById('new-dish-name').value = '';
+                document.getElementById('new-dish-price').value = '';
+            } catch (err) { alert('失败: ' + err.message); }
+        }
+
         function loginAdmin() {
             const pwd = document.getElementById('admin-password').value;
-            if (pwd === 'admin123') {
+            if (pwd === 'admin') {
                 document.getElementById('admin-login').classList.add('hidden');
                 document.getElementById('admin-portal').classList.remove('hidden');
-                loadStores(); // 刷新一下商铺下拉菜单
-            } else {
-                alert('密码错误！默认密码为：admin123');
-            }
+                loadStores();
+            } else { alert('密码错误！'); }
         }
-
         function logoutAdmin() {
             document.getElementById('admin-password').value = '';
             document.getElementById('admin-login').classList.remove('hidden');
             document.getElementById('admin-portal').classList.add('hidden');
-        }
-
-        // 后台：添加新商铺
-        async function addStore() {
-            const name = document.getElementById('new-store-name').value.trim();
-            const imageUrl = document.getElementById('new-store-image').value.trim();
-
-            if (!name) {
-                alert('请填写商店名称！');
-                return;
-            }
-
-            try {
-                await supabaseFetch('stores', {
-                    method: 'POST',
-                    body: JSON.stringify({ name, image_url: imageUrl || null })
-                });
-                alert('Store added successfully!');
-                document.getElementById('new-store-name').value = '';
-                document.getElementById('new-store-image').value = '';
-                loadStores(); // 重新加载列表刷新下拉菜单
-            } catch (error) {
-                alert(`Failed to add store: ${error.message}`);
-            }
-        }
-
-        // 后台：添加新菜品
-        async function addDish() {
-            const storeId = document.getElementById('target-store-select').value;
-            const name = document.getElementById('new-dish-name').value.trim();
-            const price = parseFloat(document.getElementById('new-dish-price').value);
-            const imageUrl = document.getElementById('new-dish-image').value.trim();
-
-            if (!storeId || !name || isNaN(price)) {
-                alert('请填写完整的菜品信息并选择目标商家！');
-                return;
-            }
-
-            try {
-                await supabaseFetch('dishes', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        store_id: parseInt(storeId),
-                        name,
-                        price,
-                        image_url: imageUrl || null
-                    })
-                });
-                alert('Item added successfully!');
-                document.getElementById('new-dish-name').value = '';
-                document.getElementById('new-dish-price').value = '';
-                document.getElementById('new-dish-image').value = '';
-            } catch (error) {
-                alert(`Failed to add item: ${error.message}`);
-            }
         }
     </script>
 </body>
