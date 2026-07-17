@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>外卖点单系统</title>
-    <!-- ⚡ 已修正：替换为正确的 Tailwind v4 Play CDN 链接，确保样式和颜色正常渲染 -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         .tab-content { display: none; }
@@ -23,6 +22,31 @@
     </nav>
 
     <main class="max-w-md mx-auto px-4 py-6">
+        
+        <!-- 代付专用独立界面 (当URL中包含pay_order_id时触发) -->
+        <div id="pay-share-view" class="hidden bg-white p-6 rounded-3xl shadow-lg border-2 border-yellow-400 text-center my-8">
+            <div class="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">🤝</div>
+            <h2 class="text-xl font-black mb-2">好友代付请求</h2>
+            <p class="text-gray-500 text-sm mb-6">您的好友向您发送了一个外卖代付订单，吃饱饱就靠你啦！</p>
+            
+            <div class="bg-gray-50 p-4 rounded-2xl text-left mb-6 space-y-2">
+                <p class="text-xs text-gray-400">订单单号: <span id="share-order-id" class="font-mono text-gray-700">#0</span></p>
+                <p class="text-sm font-bold text-gray-800">订单内容: <span id="share-order-content">-</span></p>
+                <div class="flex justify-between items-center pt-2 border-t border-gray-200">
+                    <span class="text-gray-500 text-sm">代付金额:</span>
+                    <span id="share-order-total" class="text-2xl font-black text-red-500">$0.00</span>
+                </div>
+            </div>
+
+            <div class="space-y-3" id="share-pay-actions">
+                <button onclick="payForFriend('alipay')" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-black py-4 rounded-2xl shadow-md transition">
+                    使用 支付宝 帮他付
+                </button>
+                <button onclick="payForFriend('wxpay')" class="w-full bg-green-500 hover:bg-green-600 text-white font-black py-4 rounded-2xl shadow-md transition">
+                    使用 微信支付 帮他付
+                </button>
+            </div>
+        </div>
         
         <!-- 店铺与菜品列表 -->
         <div id="content-stores" class="tab-content active">
@@ -102,6 +126,9 @@
     <script>
         const SUPABASE_URL = 'https://cnotjxbuslxxhnjjjozr.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_Z7N4AX4Bxne4lCxIfEUOvg_8dNXriUF';
+        
+        // 🚨 请配置为你真实微信/支付宝支付后端的服务地址（例：http://127.0.0.1:3000/api/pay）
+        const REAL_PAY_BACKEND = 'YOUR_REAL_PAY_BACKEND_URL_HERE';
 
         async function supabaseFetch(path, options = {}) {
             const url = `${SUPABASE_URL}/rest/v1/${path}`;
@@ -130,10 +157,78 @@
         let dishes = [];
         let cart = [];
         let currentStoreId = null;
+        let shareOrderId = null; // 当前代付订单ID
 
         window.addEventListener('DOMContentLoaded', () => {
-            loadStores();
+            // 检查URL是否是代付分享链接
+            const urlParams = new URLSearchParams(window.location.search);
+            const payOrderId = urlParams.get('pay_order_id');
+            if (payOrderId) {
+                initSharePayView(payOrderId);
+            } else {
+                loadStores();
+            }
         });
+
+        // 初始化代付页面
+        async function initSharePayView(orderId) {
+            shareOrderId = orderId;
+            // 隐藏普通的导航栏和内容区
+            document.querySelector('nav').classList.add('hidden');
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            
+            const shareView = document.getElementById('pay-share-view');
+            shareView.classList.remove('hidden');
+            
+            try {
+                const [order] = await supabaseFetch(`orders?id=eq.${orderId}&select=*`);
+                if (!order) {
+                    document.getElementById('share-order-content').innerText = '订单不存在或已被删除';
+                    document.getElementById('share-pay-actions').classList.add('hidden');
+                    return;
+                }
+                
+                document.getElementById('share-order-id').innerText = `#${order.id}`;
+                document.getElementById('share-order-content').innerText = order.content;
+                document.getElementById('share-order-total').innerText = `$${parseFloat(order.total).toFixed(2)}`;
+                
+                if (order.status === '已支付') {
+                    document.getElementById('share-pay-actions').innerHTML = `<p class="text-green-600 font-bold py-2 bg-green-50 rounded-xl">✨ 该订单已被别的好友捷足先登付过了哦！</p>`;
+                }
+            } catch(err) {
+                alert('获取代付订单失败: ' + err.message);
+            }
+        }
+
+        // 好友点击代付，调用真实的微信/支付宝接口
+        async function payForFriend(payType) {
+            if (!shareOrderId) return;
+            const totalText = document.getElementById('share-order-total').innerText.replace('$', '');
+            const bodyText = document.getElementById('share-order-content').innerText;
+            
+            try {
+                alert('正在为您跳转至大厂真实收银台...');
+                const payResponse = await fetch(REAL_PAY_BACKEND, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        orderId: shareOrderId,
+                        total: parseFloat(totalText),
+                        body: bodyText,
+                        payType: payType // 'alipay' 或 'wxpay'
+                    })
+                }).then(res => res.json());
+
+                if (payResponse.success) {
+                    // 跳转去真实的微信MWEB链接或支付宝Form链接
+                    window.location.href = payResponse.payUrl;
+                } else {
+                    alert('真实渠道下单失败: ' + payResponse.message);
+                }
+            } catch(err) {
+                alert('连接真实支付后端失败，请确认后端运行状态及网关配置: ' + err.message);
+            }
+        }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -279,30 +374,37 @@
             document.getElementById('cart-total-price').innerText = `$${total.toFixed(2)}`;
         }
 
-        // 💰 升级：集成了支付密码验证的“模拟真实支付”逻辑
+        // 🔗 核心修改：取消模拟支付，改为生成真实的代付链接
         async function checkout() {
             if (cart.length === 0) return;
             let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             let contentString = cart.map(item => `${item.dishName}x${item.quantity}`).join(', ');
             
-            // 弹出模拟付款验证框
-            const pin = prompt(`💰 订单总额: $${total.toFixed(2)}\n请输入支付密码以模拟付款 (默认密码: 123456)`);
-            if (pin === null) { alert('支付已取消'); return; }
-            
-            let payStatus = (pin === '123456') ? '已支付' : '待支付';
-            if (payStatus === '待支付') { alert('密码错误！订单已生成，状态设为：待支付。'); }
-
             try {
-                await supabaseFetch('orders', {
+                // 1. 在数据库生成一笔待代付的订单
+                const [newOrder] = await supabaseFetch('orders', {
                     method: 'POST',
                     body: JSON.stringify({ 
                         content: contentString, 
                         total: total, 
-                        status: payStatus,
+                        status: '待代付',
                         created_at: new Date().toISOString()
                     })
                 });
-                if (payStatus === '已支付') alert('🎉 模拟支付成功，订单已下发商家！');
+
+                if (!newOrder || !newOrder.id) throw new Error("订单初始化失败");
+
+                // 2. 动态构建带有当前订单参数的代付链接
+                const shareLink = `${window.location.origin}${window.location.pathname}?pay_order_id=${newOrder.id}`;
+                
+                // 3. 提示复制
+                navigator.clipboard.writeText(shareLink).then(() => {
+                    alert(`🎉 下单成功！订单号为 #${newOrder.id}\n\n专属代付链接已自动复制到剪贴板，快发送给微信/QQ好友帮你买单吧！`);
+                }).catch(() => {
+                    // 兼容有些浏览器不支持剪贴板API的情况
+                    prompt(`🎉 下单成功！\n请手动复制下方的代付链接发给好友：`, shareLink);
+                });
+
                 cart = [];
                 updateCartBadge();
                 switchTab('orders');
@@ -320,11 +422,15 @@
                 }
                 ordersList.innerHTML = orders.map(order => {
                     const dateDisplay = order.created_at ? new Date(order.created_at).toLocaleString() : '刚刚';
+                    let statusColor = 'bg-red-100 text-red-500';
+                    if (order.status === '已支付') statusColor = 'bg-green-100 text-green-600';
+                    else if (order.status === '待代付') statusColor = 'bg-orange-100 text-orange-600';
+
                     return `
                         <div class="bg-white p-5 rounded-2xl shadow-sm space-y-3">
                             <div class="flex justify-between items-center border-b pb-2 border-gray-100">
                                 <span class="text-xs text-gray-400">ID: #${order.id}</span>
-                                <span class="px-2 py-1 text-xs font-black rounded-lg ${order.status === '已支付' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}">${order.status}</span>
+                                <span class="px-2 py-1 text-xs font-black rounded-lg ${statusColor}">${order.status}</span>
                             </div>
                             <p class="text-gray-800 font-bold text-sm">${order.content}</p>
                             <div class="flex justify-between items-center pt-1">
