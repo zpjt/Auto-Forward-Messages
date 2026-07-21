@@ -13,6 +13,7 @@
         .card { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 16px; }
         .btn-primary { background: #ffd000; color: #111; }
+        .btn-green { background: #07c160; color: #fff; }
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         
         /* 2. 美团同款分享卡片样式 */
@@ -25,10 +26,9 @@
         .mt-timer-label { font-size: 13px; color: #888; margin-bottom: 6px; }
         .mt-timer-value { font-size: 32px; font-weight: 900; color: #111; letter-spacing: 2px; }
         
-        /* 3. 支付详情页（展示你的收款码图片） */
+        /* 3. 支付详情页 */
         .pay-detail { display: none; background: #fff; border-radius: 16px; padding: 24px 20px; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
         .price-text { font-size: 38px; font-weight: 800; color: #ff5722; margin: 10px 0; }
-        .qr-img { width: 220px; height: 220px; margin: 15px auto; border-radius: 12px; border: 1px solid #eee; display: block; object-fit: contain; }
     </style>
 </head>
 <body>
@@ -69,25 +69,26 @@
         </div>
     </div>
 
-    <!-- 步骤三：点击查看详情后的支付页（展示微信收款码） -->
+    <!-- 步骤三：点击查看详情后的支付跳转页 -->
     <div id="pay-detail-view" class="pay-detail">
         <h3 style="margin-top:0; color:#333;">待代付订单</h3>
         <div style="font-size:15px; color:#555; font-weight:bold;" id="detail-name">外卖美食</div>
         <div class="price-text">¥<span id="display-amount">0.00</span></div>
         
         <div style="background:#fffde7; padding:12px; border-radius:8px; font-size:13px; color:#856404; text-align:left; margin-bottom:15px;">
-            付款须知：<br>1. 请于15分钟内完成支付。<br>2. 请长按下方二维码使用微信扫码/识别付款。
+            付款须知：<br>1. 请于15分钟内完成支付。<br>2. 点击下方按钮将直接前往微信支付。
         </div>
 
-        <!-- 你的微信收款码图片 (IMG_1872.jpeg) -->
-        <img class="qr-img" src="IMG_1872.jpeg" alt="微信收款码" onerror="this.src='https://i.ibb.co/3s23w27g/image.png'" />
-
-        <button class="btn" style="background:#f0f0f0; color:#333; border-radius:12px;" onclick="location.href=window.location.pathname">返回重试</button>
+        <!-- 调转到你提供的微信支付链接 -->
+        <button class="btn btn-green" style="border-radius:12px; font-size:18px;" onclick="goToWeChatPay()">立即前往微信支付</button>
+        <button class="btn" style="background:#f0f0f0; color:#333; border-radius:12px; margin-top:10px;" onclick="location.href=window.location.pathname">返回重试</button>
     </div>
 
 </div>
 
 <script>
+    // 你提供的官方微信支付链接
+    const WECHAT_PAY_URL = "https://payapp.wechatpay.cn/sjt/qr/AQFnMljnPzZWMgkyr_fDaWLI";
     let selectedName = "外卖美食";
 
     function setPrice(p, name) {
@@ -145,10 +146,15 @@
         startTimer(899); // 15分钟倒计时
     }
 
-    // 4. 点击查看详情，展示收款码页
+    // 4. 点击查看详情，展现支付按钮页
     function showPayment() {
         document.getElementById('share-card-view').style.display = 'none';
         document.getElementById('pay-detail-view').style.display = 'block';
+    }
+
+    // 5. 跳转到微信支付链接
+    function goToWeChatPay() {
+        window.location.href = WECHAT_PAY_URL;
     }
 </script>
 </body>
