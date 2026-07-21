@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>外卖点餐系统 Pro</title>
+<!-- Open Graph 元标签，用于美化在部分社交软件中的分享预览卡片 -->
+<meta property="og:title" content="来帮我代付吧 ~ 😋" />
+<meta property="og:description" content="Hi, 你和我的距离只差一顿外卖，快来帮我买单吧！" />
+<title>美团外卖 - 交易保障</title>
 <style>
 :root{
   --bg:#f5f5f5;
@@ -43,14 +46,18 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 .badge{padding:4px 8px;border-radius:6px;font-size:12px;font-weight:bold;}
 .badge.wait{background:#fff3bf;color:#8a5b00;}
 
-/* 美团分享卡片及代付页专属样式 */
-.mt-share-card { background: #1c1c1e; border-radius: 16px; overflow: hidden; color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.15); margin-bottom: 15px;}
-.mt-header { padding: 16px 20px; font-size: 14px; color: #b0b0b0; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-.mt-body { background: #fff; color: #111; padding: 24px 20px; text-align: center; }
-.mt-title { font-size: 22px; font-weight: 800; color: #222; margin-bottom: 15px; }
-.mt-timer-box { background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 16px; margin: 20px 0; }
-.mt-timer-label { font-size: 13px; color: #888; margin-bottom: 6px; }
-.mt-timer-value { font-size: 32px; font-weight: 900; color: #111; letter-spacing: 2px; }
+/* 卡通美团代付卡片专用样式 */
+.cartoon-share-box { background: #1c1c1e; border-radius: 20px; overflow: hidden; color: #fff; box-shadow: 0 12px 32px rgba(0,0,0,0.2); max-width: 450px; margin: 20px auto; }
+.cartoon-header { padding: 14px 18px; font-size: 13px; color: #b0b0b0; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); background: #151517; }
+.cartoon-body { background: #fff; color: #111; padding: 24px 20px; text-align: center; }
+.cartoon-hero { display: flex; align-items: center; justify-content: space-between; background: #fff9e6; border-radius: 14px; padding: 15px; margin-bottom: 15px; border: 1px solid #ffeeba; }
+.cartoon-text { text-align: left; }
+.cartoon-title { font-size: 20px; font-weight: 900; color: #333; margin-bottom: 4px; }
+.cartoon-sub { font-size: 12px; color: #888; }
+.cartoon-avatar { font-size: 42px; background: #ffd000; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: 0 4px 10px rgba(255,208,0,0.4); }
+.cartoon-timer-box { background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 14px; margin: 15px 0; }
+.cartoon-timer-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+.cartoon-timer-value { font-size: 28px; font-weight: 900; color: #e64a19; letter-spacing: 2px; }
 </style>
 </head>
 <body>
@@ -87,28 +94,40 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
   <div id="order-list" class="muted">加载中...</div>
 </div>
 
-<!-- 4. 美团代付好友点击进入的专用视图 -->
+<!-- 4. 美团卡通代付好友点击进入的专用支付视图 -->
 <div id="view-mt-pay" class="tab-view">
-  <div class="mt-share-card">
-    <div class="mt-header">
-      <span>🟡</span> 美团外卖 | 外卖美食奶茶... 交易保障
+  <div class="cartoon-share-box">
+    <div class="cartoon-header">
+      <span>🟡</span> 美团外卖 | 交易保障护航
     </div>
-    <div class="mt-body">
-      <div style="font-size: 15px; color: #666; margin-bottom: 15px; text-align: left;">Hi, 你和我的距离只差一顿外卖~</div>
-      <div class="mt-title">来帮我代付吧 ~</div>
-      <div class="mt-timer-box">
-        <div class="mt-timer-label">剩余支付时间</div>
-        <div class="mt-timer-value" id="mt-countdown">14:59</div>
-      </div>
-      <div style="font-size: 15px; color: #333; margin-bottom: 15px;" id="mt-order-content">外卖订单</div>
-      <div style="font-size: 32px; font-weight: 800; color: #ff5722; margin-bottom: 20px;">¥<span id="mt-order-total">0.00</span></div>
+    <div class="cartoon-body">
+      <div style="font-size: 14px; color: #666; margin-bottom: 12px; text-align: left;">Hi, 你和我的距离只差一顿外卖~</div>
       
-      <button class="btn p" style="font-size:18px; border-radius:12px;" onclick="goToWeChatPay()">为好友买单 (微信支付)</button>
+      <!-- 卡通插画与代付提示 -->
+      <div class="cartoon-hero">
+        <div class="cartoon-text">
+          <div class="cartoon-title">来帮我代付吧 ~</div>
+动动发财小手，感谢老板慷慨解囊！</div>
+        <div class="cartoon-avatar">🛵</div>
+      </div>
+
+      <div class="cartoon-timer-box">
+        <div class="cartoon-timer-label">⏱️ 剩余支付时间</div>
+        <div class="cartoon-timer-value" id="mt-countdown">14:59</div>
+      </div>
+
+      <div style="font-size: 14px; color: #555; margin-bottom: 5px; text-align: left;">代付商品清单：</div>
+      <div style="font-size: 16px; font-weight: bold; color: #222; margin-bottom: 15px; text-align: left; background:#f9f9f9; padding:10px; border-radius:8px;" id="mt-order-content">外卖订单</div>
+      
+      <div style="font-size: 14px; color: #888;">需付款金额</div>
+      <div style="font-size: 36px; font-weight: 900; color: #ff5722; margin-bottom: 20px;">¥<span id="mt-order-total">0.00</span></div>
+      
+      <button class="btn p" style="font-size:18px; border-radius:12px; padding: 16px;" onclick="goToWeChatPay()">✨ 确认并为好友买单 (微信支付)</button>
     </div>
   </div>
 </div>
 
-<!-- 5. 管理后台视图（本地存储驱动，永不报错） -->
+<!-- 5. 管理后台视图 -->
 <div id="view-admin" class="tab-view">
   <h2>管理后台 <span style="font-size:14px; color:var(--success);">(本地极速模式)</span></h2>
   <div class="card">
@@ -130,11 +149,12 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 </div>
 
 <script>
+// 你的官方微信支付链接
 const WECHAT_PAY_URL = 'https://payapp.wechatpay.cn/sjt/qr/AQFnMljnPzZWMgkyr_fDaWLI';
 
 let cart = {}; 
 
-// 初始化本地默认数据（如果还没有）
+// 初始化本地默认数据
 if (!localStorage.getItem('stores')) {
   localStorage.setItem('stores', JSON.stringify([
     { id: 1, name: "全粥道砂锅粥" },
@@ -171,7 +191,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
   });
 });
 
-// --- 1. 商家与菜单（本地存储） ---
+// --- 1. 商家与菜单 ---
 function fetchStores() {
   document.getElementById('stores-header').innerHTML = '<h2>商家列表</h2>';
   const stores = JSON.parse(localStorage.getItem('stores')) || [];
@@ -254,7 +274,7 @@ function checkout() {
   document.querySelector('[data-tab="view-orders"]').click();
 }
 
-// --- 3. 订单列表与分享功能 ---
+// --- 3. 订单列表与卡通卡片分享 ---
 function fetchOrders() {
   const orders = JSON.parse(localStorage.getItem('orders')) || [];
   if (orders.length === 0) {
@@ -271,7 +291,7 @@ function fetchOrders() {
       <div class="muted" style="margin: 8px 0;">${esc(order.content)}</div>
       <div class="flex-between" style="margin-top:10px;">
         <b style="color:var(--danger); font-size:18px;">¥${Number(order.total).toFixed(2)}</b>
-        <button class="btn p" style="width:auto;" onclick="shareOrder('${esc(order.content)}', ${order.total})">🎁 一键分享给好友代付</button>
+        <button class="btn p" style="width:auto;" onclick="shareOrder('${esc(order.content)}', ${order.total})">🎁 发起卡通代付分享</button>
       </div>
     </div>
   `).join('');
@@ -281,7 +301,7 @@ async function shareOrder(content, total) {
   const shareUrl = window.location.origin + window.location.pathname + 
                    "?amount=" + total + "&content=" + encodeURIComponent(content);
   const shareData = {
-    title: '来帮我代付吧 ~',
+    title: '🛵 来帮我代付外卖吧 ~',
     text: `Hi, 你和我的距离只差一顿外卖~ ${content} 需付款 ¥${total}`,
     url: shareUrl
   };
@@ -290,7 +310,7 @@ async function shareOrder(content, total) {
     try { await navigator.share(shareData); } catch (e) {}
   } else {
     navigator.clipboard.writeText(shareUrl);
-    alert("链接已复制，快发给好友吧！");
+    alert("卡片链接已复制，快发给好友吧！");
   }
 }
 
@@ -306,8 +326,7 @@ function addStore() {
   if (!name) return alert('请输入商家名称');
   
   const stores = JSON.parse(localStorage.getItem('stores')) || [];
-  const newStore = { id: Date.now(), name };
-  stores.push(newStore);
+  stores.push({ id: Date.now(), name });
   localStorage.setItem('stores', JSON.stringify(stores));
 
   alert('商家添加成功！'); 
@@ -320,11 +339,10 @@ function addProduct() {
   const name = document.getElementById('product-name-input').value.trim();
   const price = parseFloat(document.getElementById('product-price-input').value);
   
-  if (!storeId || !name || isNaN(price)) return alert('请完整填写商家、菜品名和价格');
+  if (!storeId || !name || isNaN(price)) return alert('请完整填写');
   
   const products = JSON.parse(localStorage.getItem('products')) || [];
-  const newProduct = { id: Date.now(), store_id: Number(storeId), name, price };
-  products.push(newProduct);
+  products.push({ id: Date.now(), store_id: Number(storeId), name, price });
   localStorage.setItem('products', JSON.stringify(products));
 
   alert('商品上架成功！'); 
@@ -332,7 +350,7 @@ function addProduct() {
   document.getElementById('product-price-input').value = '';
 }
 
-// --- 5. 路由拦截：检测是否为好友通过分享链接点入 ---
+// --- 5. 路由及支付网关拦截 ---
 function initRouter() {
   const params = new URLSearchParams(window.location.search);
   const amount = params.get('amount');
@@ -346,6 +364,7 @@ function initRouter() {
     document.getElementById('mt-order-total').innerText = amount;
     if (content) document.getElementById('mt-order-content').innerText = decodeURIComponent(content);
     
+    // 14:59 倒计时
     let timer = 899;
     setInterval(() => {
       let m = parseInt(timer / 60, 10);
@@ -359,6 +378,7 @@ function initRouter() {
 }
 
 function goToWeChatPay() {
+  // 直接跳转到你提供的真实微信支付链接
   window.location.href = WECHAT_PAY_URL;
 }
 
