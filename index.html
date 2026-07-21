@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<!-- 微信分享卡片图：保持使用你的卡通图 IMG_1872.jpeg -->
 <meta property="og:title" content="来帮我代付吧 ~ 😋" />
 <meta property="og:description" content="Hi, 你和我的距离只差一顿外卖，快来帮我买单吧！" />
 <meta property="og:image" content="https://zpjt.github.io/Auto-Forward-Messages/IMG_1872.jpeg" />
@@ -46,21 +45,30 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 .badge{padding:4px 8px;border-radius:6px;font-size:12px;font-weight:bold;}
 .badge.wait{background:#fff3bf;color:#8a5b00;}
 
-/* 好友点开后的美团代付简洁专业页面 */
+/* 好友点开后的美团代付专业页面 */
 .pay-page-container { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); max-width: 500px; margin: 10px auto; text-align: center; }
 .timer-banner { background: #fffde7; border: 1px solid #ffe082; border-radius: 10px; padding: 12px; text-align: center; margin: 15px 0; color: #8a5b00; font-weight: bold; }
 .item-box { background: #f9f9f9; padding: 12px 15px; border-radius: 10px; margin: 12px 0; font-size: 15px; font-weight: bold; text-align: left; }
 .price-display { font-size: 36px; font-weight: 900; color: #ff5722; margin: 15px 0; }
 
-/* 收款码展示 */
-.pay-qr-img {
-  width: 220px;
-  height: 220px;
-  object-fit: contain;
+/* 升级版二维码容器：专为微信长按识别设计 */
+.qr-wrapper {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  margin: 15px auto;
   border-radius: 12px;
   border: 1px solid #eee;
-  margin: 15px auto;
+  overflow: hidden;
+  background: #fcfcfc;
+}
+.pay-qr-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   display: block;
+  /* 允许长按识别的关键 */
+  -webkit-touch-callout: default !important;
 }
 </style>
 </head>
@@ -113,13 +121,15 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
     <div style="font-size: 13px; color: #666;">需付款金额</div>
     <div class="price-display">¥<span id="mt-order-total">0.00</span></div>
 
-    <!-- 引导保存图片扫码 -->
-    <div style="background: #fff9e6; border: 1px solid #ffe08a; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px; color: #856404; text-align: center; font-weight: bold;">
-      👇 请【长按图片保存】或截图，打开微信【扫一扫】相册付款
+    <!-- 优化后的专业微信提示 -->
+    <div style="background: #f0f9eb; border: 1px solid #d1e7dd; padding: 12px; border-radius: 10px; margin-bottom: 5px; font-size: 13px; color: #0f5132; text-align: center; font-weight: bold;">
+      👆 请直接【长按图片】选择「识别图中二维码」完成支付
     </div>
 
-    <!-- 核心：这里已正确指向你的收款码文件名 36.jpeg -->
-    <img class="pay-qr-img" src="36.jpeg" alt="微信收款码" />
+    <!-- 二维码包裹容器（完美支持微信长按呼出菜单） -->
+    <div class="qr-wrapper">
+      <img class="pay-qr-img" src="36.jpeg" alt="微信收款码" />
+    </div>
 
     <p style="font-size: 12px; color: #888; margin-top: 10px;">付款完成后请通知好友确认收单~</p>
   </div>
