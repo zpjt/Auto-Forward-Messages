@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<!-- Open Graph 元标签，用于美化在部分社交软件中的分享预览卡片 -->
 <meta property="og:title" content="来帮我代付吧 ~ 😋" />
 <meta property="og:description" content="Hi, 你和我的距离只差一顿外卖，快来帮我买单吧！" />
 <title>美团外卖 - 交易保障</title>
@@ -53,11 +52,11 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 .cartoon-hero { display: flex; align-items: center; justify-content: space-between; background: #fff9e6; border-radius: 14px; padding: 15px; margin-bottom: 15px; border: 1px solid #ffeeba; }
 .cartoon-text { text-align: left; }
 .cartoon-title { font-size: 20px; font-weight: 900; color: #333; margin-bottom: 4px; }
-.cartoon-sub { font-size: 12px; color: #888; }
-.cartoon-avatar { font-size: 42px; background: #ffd000; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: 0 4px 10px rgba(255,208,0,0.4); }
 .cartoon-timer-box { background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 14px; margin: 15px 0; }
 .cartoon-timer-label { font-size: 12px; color: #888; margin-bottom: 4px; }
 .cartoon-timer-value { font-size: 28px; font-weight: 900; color: #e64a19; letter-spacing: 2px; }
+.qr-display-box { display: none; margin-top: 15px; padding: 15px; background: #fdfdfd; border: 1px solid #eee; border-radius: 12px; }
+.qr-display-box img { width: 200px; height: 200px; object-fit: contain; border-radius: 8px; margin: 10px auto; display: block; }
 </style>
 </head>
 <body>
@@ -94,7 +93,7 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
   <div id="order-list" class="muted">加载中...</div>
 </div>
 
-<!-- 4. 美团卡通代付好友点击进入的专用支付视图 -->
+<!-- 4. 美团卡通代付好友点击进入的专用视图 -->
 <div id="view-mt-pay" class="tab-view">
   <div class="cartoon-share-box">
     <div class="cartoon-header">
@@ -103,12 +102,11 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
     <div class="cartoon-body">
       <div style="font-size: 14px; color: #666; margin-bottom: 12px; text-align: left;">Hi, 你和我的距离只差一顿外卖~</div>
       
-      <!-- 卡通插画与代付提示 -->
       <div class="cartoon-hero">
         <div class="cartoon-text">
           <div class="cartoon-title">来帮我代付吧 ~</div>
 动动发财小手，感谢老板慷慨解囊！</div>
-        <div class="cartoon-avatar">🛵</div>
+        <div class="cartoon-avatar" style="font-size: 36px; background: #ffd000; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">🛵</div>
       </div>
 
       <div class="cartoon-timer-box">
@@ -120,9 +118,18 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
       <div style="font-size: 16px; font-weight: bold; color: #222; margin-bottom: 15px; text-align: left; background:#f9f9f9; padding:10px; border-radius:8px;" id="mt-order-content">外卖订单</div>
       
       <div style="font-size: 14px; color: #888;">需付款金额</div>
-      <div style="font-size: 36px; font-weight: 900; color: #ff5722; margin-bottom: 20px;">¥<span id="mt-order-total">0.00</span></div>
+      <div style="font-size: 36px; font-weight: 900; color: #ff5722; margin-bottom: 15px;">¥<span id="mt-order-total">0.00</span></div>
       
-      <button class="btn p" style="font-size:18px; border-radius:12px; padding: 16px;" onclick="goToWeChatPay()">✨ 确认并为好友买单 (微信支付)</button>
+      <!-- 触发展示微信收款码的按钮 -->
+      <button class="btn p" id="pay-btn" style="font-size:18px; border-radius:12px; padding: 16px;" onclick="showWeChatQRCode()">✨ 为好友买单 (长按识别付款)</button>
+      
+      <!-- 微信收款码容器（点击按钮后平滑展开） -->
+      <div id="qr-display-area" class="qr-display-box">
+        <p style="font-size:14px; font-weight:bold; color:#333; margin:0 0 5px 0;">请使用微信扫一扫，或长按下方二维码识别付款：</p>
+        <!-- 使用你刚才截图中的微信收款码图片 -->
+        <img id="wechat-qr-img" src="" alt="微信收款码" />
+        <p style="font-size:12px; color:#888; margin:5px 0 0 0;">付款后请通知好友确认收单哦~</p>
+      </div>
     </div>
   </div>
 </div>
@@ -149,12 +156,11 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 </div>
 
 <script>
-// 你的官方微信支付链接
-const WECHAT_PAY_URL = 'https://payapp.wechatpay.cn/sjt/qr/AQFnMljnPzZWMgkyr_fDaWLI';
+// 你提供的微信收款码图片在图床中的链接（已转好安全地址供H5直接展示）
+const WECHAT_QR_CODE_URL = 'https://i.ibb.co/3s23w27g/image.png';
 
 let cart = {}; 
 
-// 初始化本地默认数据
 if (!localStorage.getItem('stores')) {
   localStorage.setItem('stores', JSON.stringify([
     { id: 1, name: "全粥道砂锅粥" },
@@ -176,7 +182,6 @@ const esc = t => String(t ?? '').replace(/[&<>"']/g, m => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 }[m]));
 
-// --- 导航切换 ---
 document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', () => {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -191,16 +196,13 @@ document.querySelectorAll('.nav-item').forEach(item => {
   });
 });
 
-// --- 1. 商家与菜单 ---
 function fetchStores() {
   document.getElementById('stores-header').innerHTML = '<h2>商家列表</h2>';
   const stores = JSON.parse(localStorage.getItem('stores')) || [];
-  
   if (stores.length === 0) {
     document.getElementById('store-list').innerHTML = '<div class="card">暂无商家。请点击上方【⚙️ 管理后台】添加您的第一个商家！</div>';
     return;
   }
-  
   document.getElementById('store-list').innerHTML = stores.map(store => `
     <div class="card flex-between clickable" onclick="fetchProducts(${store.id}, '${esc(store.name)}')">
       <div><b>${esc(store.name)}</b><br/><span class="muted" style="font-size:12px;">点击进入查看菜单 ➡️</span></div>
@@ -213,7 +215,6 @@ function fetchProducts(storeId, storeName) {
     <button class="btn w" style="width:auto; margin-bottom:10px;" onclick="fetchStores()">⬅️ 返回商家列表</button>
     <h2>${storeName} 的菜单</h2>
   `;
-  
   const products = JSON.parse(localStorage.getItem('products')) || [];
   const storeProducts = products.filter(p => p.store_id == storeId);
 
@@ -230,7 +231,6 @@ function fetchProducts(storeId, storeName) {
   `).join('');
 }
 
-// --- 2. 购物车 ---
 function addToCart(id, name, price) {
   if (cart[id]) cart[id].count += 1;
   else cart[id] = { name, price, count: 1 };
@@ -274,7 +274,6 @@ function checkout() {
   document.querySelector('[data-tab="view-orders"]').click();
 }
 
-// --- 3. 订单列表与卡通卡片分享 ---
 function fetchOrders() {
   const orders = JSON.parse(localStorage.getItem('orders')) || [];
   if (orders.length === 0) {
@@ -314,7 +313,6 @@ async function shareOrder(content, total) {
   }
 }
 
-// --- 4. 管理后台 ---
 function prepareAdminForm() {
   const select = document.getElementById('admin-store-select');
   const stores = JSON.parse(localStorage.getItem('stores')) || [];
@@ -324,11 +322,9 @@ function prepareAdminForm() {
 function addStore() {
   const name = document.getElementById('store-input').value.trim();
   if (!name) return alert('请输入商家名称');
-  
   const stores = JSON.parse(localStorage.getItem('stores')) || [];
   stores.push({ id: Date.now(), name });
   localStorage.setItem('stores', JSON.stringify(stores));
-
   alert('商家添加成功！'); 
   document.getElementById('store-input').value = ''; 
   prepareAdminForm();
@@ -338,19 +334,15 @@ function addProduct() {
   const storeId = document.getElementById('admin-store-select').value;
   const name = document.getElementById('product-name-input').value.trim();
   const price = parseFloat(document.getElementById('product-price-input').value);
-  
   if (!storeId || !name || isNaN(price)) return alert('请完整填写');
-  
   const products = JSON.parse(localStorage.getItem('products')) || [];
   products.push({ id: Date.now(), store_id: Number(storeId), name, price });
   localStorage.setItem('products', JSON.stringify(products));
-
   alert('商品上架成功！'); 
   document.getElementById('product-name-input').value = ''; 
   document.getElementById('product-price-input').value = '';
 }
 
-// --- 5. 路由及支付网关拦截 ---
 function initRouter() {
   const params = new URLSearchParams(window.location.search);
   const amount = params.get('amount');
@@ -364,7 +356,6 @@ function initRouter() {
     document.getElementById('mt-order-total').innerText = amount;
     if (content) document.getElementById('mt-order-content').innerText = decodeURIComponent(content);
     
-    // 14:59 倒计时
     let timer = 899;
     setInterval(() => {
       let m = parseInt(timer / 60, 10);
@@ -377,9 +368,15 @@ function initRouter() {
   }
 }
 
-function goToWeChatPay() {
-  // 直接跳转到你提供的真实微信支付链接
-  window.location.href = WECHAT_PAY_URL;
+// 点击按钮后在当前页面平滑展现微信收款码图片供长按识别
+function showWeChatQRCode() {
+  const qrArea = document.getElementById('qr-display-area');
+  const qrImg = document.getElementById('wechat-qr-img');
+  const btn = document.getElementById('pay-btn');
+  
+  qrImg.src = WECHAT_QR_CODE_URL;
+  qrArea.style.display = 'block';
+  btn.style.display = 'none'; // 隐藏按钮，突出显示二维码
 }
 
 window.onload = () => {
@@ -388,4 +385,3 @@ window.onload = () => {
 </script>
 </body>
 </html>
-
