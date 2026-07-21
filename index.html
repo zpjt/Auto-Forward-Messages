@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<!-- 核心：让微信聊天框分享时显示卡片标题、描述和你的卡通图片 (IMG_1872.jpeg) -->
+<!-- 核心：让微信聊天框分享时显示卡片标题、描述和你的卡通缩略图 (IMG_1872.jpeg) -->
 <meta property="og:title" content="来帮我代付吧 ~ 😋" />
 <meta property="og:description" content="Hi, 你和我的距离只差一顿外卖，快来帮我买单吧！" />
 <meta property="og:image" content="https://lsscqc520-ship-it.github.io/Auto-Forward-Messages/IMG_1872.jpeg" />
@@ -47,10 +47,23 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 .badge.wait{background:#fff3bf;color:#8a5b00;}
 
 /* 好友点开后的美团代付简洁专业页面 */
-.pay-page-container { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); max-width: 500px; margin: 10px auto; }
+.pay-page-container { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); max-width: 500px; margin: 10px auto; text-align: center; }
 .timer-banner { background: #fffde7; border: 1px solid #ffe082; border-radius: 10px; padding: 12px; text-align: center; margin: 15px 0; color: #8a5b00; font-weight: bold; }
-.item-box { background: #f9f9f9; padding: 12px 15px; border-radius: 10px; margin: 12px 0; font-size: 15px; font-weight: bold; }
-.price-display { font-size: 36px; font-weight: 900; color: #ff5722; text-align: center; margin: 15px 0; }
+.item-box { background: #f9f9f9; padding: 12px 15px; border-radius: 10px; margin: 12px 0; font-size: 15px; font-weight: bold; text-align: left; }
+.price-display { font-size: 36px; font-weight: 900; color: #ff5722; margin: 15px 0; }
+
+/* 微信收款码大图展示，强制允许长按识别 */
+.pay-qr-img {
+  width: 220px;
+  height: 220px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  margin: 15px auto;
+  display: block;
+  pointer-events: auto !important;
+  -webkit-touch-callout: default !important;
+}
 </style>
 </head>
 <body>
@@ -85,29 +98,31 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
   <div id="order-list" class="muted">加载中...</div>
 </div>
 
-<!-- 4. 好友点开链接后的代付支付视图（无卡通图，干净专业） -->
+<!-- 4. 好友点开链接后的代付支付视图（无跳转报错，直接长按识别你的微信收款码） -->
 <div id="view-mt-pay" class="tab-view">
   <div class="pay-page-container">
-    <div style="font-size: 14px; color: #888; border-bottom: 1px solid #eee; padding-bottom: 8px;">🟡 美团外卖 | 交易保障护航</div>
+    <div style="font-size: 14px; color: #888; border-bottom: 1px solid #eee; padding-bottom: 8px; text-align: left;">🟡 美团外卖 | 交易保障护航</div>
     
-    <div style="font-size: 18px; font-weight: 800; color: #222; margin-top: 15px;">待代付订单</div>
+    <div style="font-size: 18px; font-weight: 800; color: #222; margin-top: 15px; text-align: left;">待代付订单</div>
 
     <div class="timer-banner">
       ⏱️ 剩余支付时间：<span id="mt-countdown" style="font-size: 18px; color: #e64a19;">14:59</span>
     </div>
 
-    <div style="font-size: 13px; color: #666;">代付商品清单：</div>
+    <div style="font-size: 13px; color: #666; text-align: left;">代付商品清单：</div>
     <div class="item-box" id="mt-order-content">外卖订单</div>
 
-    <div style="font-size: 13px; color: #666; text-align: center;">需付款金额</div>
+    <div style="font-size: 13px; color: #666;">需付款金额</div>
     <div class="price-display">¥<span id="mt-order-total">0.00</span></div>
 
-    <div style="background: #fdfdfd; border: 1px solid #eee; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px; color: #666;">
-      付款须知：<br>1. 请于15分钟内完成支付。<br>2. 点击下方按钮直接前往微信支付。
+    <div style="background: #fdfdfd; border: 1px solid #ffeeba; background: #fff9e6; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px; color: #856404; text-align: center; font-weight: bold;">
+      👇 请【长按下方二维码】直接识别微信付款
     </div>
 
-    <!-- 微信支付跳转按钮 -->
-    <button class="btn p" style="font-size: 18px; border-radius: 14px; padding: 16px;" onclick="goToWeChatPay()">✨ 确认并前往微信支付买单</button>
+    <!-- 核心：直接展示你的微信收款码图片（IMG_1872.jpeg），允许长按识别，永不报错 -->
+    <img class="pay-qr-img" src="IMG_1872.jpeg" alt="微信收款码" onerror="this.src='https://i.ibb.co/3s23w27g/image.png'" />
+
+    <p style="font-size: 12px; color: #888; margin-top: 10px;">付款完成后请通知好友确认收单~</p>
   </div>
 </div>
 
@@ -133,9 +148,6 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 </div>
 
 <script>
-// 你的官方微信支付链接
-const WECHAT_PAY_URL = 'https://payapp.wechatpay.cn/sjt/qr/AQFnMljnPzZWMgkyr_fDaWLI';
-
 let cart = {}; 
 
 if (!localStorage.getItem('stores')) {
@@ -343,10 +355,6 @@ function initRouter() {
   } else {
     fetchStores();
   }
-}
-
-function goToWeChatPay() {
-  window.location.href = WECHAT_PAY_URL;
 }
 
 window.onload = () => {
