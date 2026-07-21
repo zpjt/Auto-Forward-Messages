@@ -56,7 +56,18 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 .cartoon-timer-label { font-size: 12px; color: #888; margin-bottom: 4px; }
 .cartoon-timer-value { font-size: 28px; font-weight: 900; color: #e64a19; letter-spacing: 2px; }
 .qr-display-box { display: none; margin-top: 15px; padding: 15px; background: #fdfdfd; border: 1px solid #eee; border-radius: 12px; }
-.qr-display-box img { width: 200px; height: 200px; object-fit: contain; border-radius: 8px; margin: 10px auto; display: block; }
+
+/* 关键修复：允许手机浏览器长按图片调出系统菜单 */
+.qr-display-box img { 
+  width: 210px; 
+  height: 210px; 
+  object-fit: contain; 
+  border-radius: 8px; 
+  margin: 10px auto; 
+  display: block; 
+  pointer-events: auto !important; 
+  -webkit-touch-callout: default !important; 
+}
 </style>
 </head>
 <body>
@@ -121,14 +132,13 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
       <div style="font-size: 36px; font-weight: 900; color: #ff5722; margin-bottom: 15px;">¥<span id="mt-order-total">0.00</span></div>
       
       <!-- 触发展示微信收款码的按钮 -->
-      <button class="btn p" id="pay-btn" style="font-size:18px; border-radius:12px; padding: 16px;" onclick="showWeChatQRCode()">✨ 为好友买单 (长按识别付款)</button>
+      <button class="btn p" id="pay-btn" style="font-size:18px; border-radius:12px; padding: 16px;" onclick="showWeChatQRCode()">✨ 为好友买单 (显示付款码)</button>
       
-      <!-- 微信收款码容器（点击按钮后平滑展开） -->
+      <!-- 微信收款码容器 -->
       <div id="qr-display-area" class="qr-display-box">
-        <p style="font-size:14px; font-weight:bold; color:#333; margin:0 0 5px 0;">请使用微信扫一扫，或长按下方二维码识别付款：</p>
-        <!-- 使用你刚才截图中的微信收款码图片 -->
+        <p style="font-size:14px; font-weight:bold; color:#333; margin:0 0 5px 0;">请将手机屏幕截图，或直接【长按下方二维码】识别付款：</p>
         <img id="wechat-qr-img" src="" alt="微信收款码" />
-        <p style="font-size:12px; color:#888; margin:5px 0 0 0;">付款后请通知好友确认收单哦~</p>
+        <p style="font-size:12px; color:#e64a19; margin:5px 0 0 0; font-weight:bold;">💡 提示：若微信提示无法识别，请截屏后用微信扫一扫相册打开</p>
       </div>
     </div>
   </div>
@@ -156,7 +166,7 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 </div>
 
 <script>
-// 你提供的微信收款码图片在图床中的链接（已转好安全地址供H5直接展示）
+// 微信收款码图片地址（已转为稳定线上直链）
 const WECHAT_QR_CODE_URL = 'https://i.ibb.co/3s23w27g/image.png';
 
 let cart = {}; 
@@ -368,7 +378,6 @@ function initRouter() {
   }
 }
 
-// 点击按钮后在当前页面平滑展现微信收款码图片供长按识别
 function showWeChatQRCode() {
   const qrArea = document.getElementById('qr-display-area');
   const qrImg = document.getElementById('wechat-qr-img');
@@ -376,7 +385,7 @@ function showWeChatQRCode() {
   
   qrImg.src = WECHAT_QR_CODE_URL;
   qrArea.style.display = 'block';
-  btn.style.display = 'none'; // 隐藏按钮，突出显示二维码
+  btn.style.display = 'none';
 }
 
 window.onload = () => {
@@ -385,3 +394,4 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
