@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<!-- 核心：让微信聊天框分享时显示卡片标题、描述和你的卡通缩略图 (IMG_1872.jpeg) -->
+<!-- 已修正为你的真实 GitHub 绝对路径，微信分享卡片将完美显示 -->
 <meta property="og:title" content="来帮我代付吧 ~ 😋" />
 <meta property="og:description" content="Hi, 你和我的距离只差一顿外卖，快来帮我买单吧！" />
-<meta property="og:image" content="https://lsscqc520-ship-it.github.io/Auto-Forward-Messages/IMG_1872.jpeg" />
+<meta property="og:image" content="https://zpjt.github.io/Auto-Forward-Messages/IMG_1872.jpeg" />
 <title>美团外卖 - 交易保障</title>
 <style>
 :root{
@@ -52,7 +52,7 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 .item-box { background: #f9f9f9; padding: 12px 15px; border-radius: 10px; margin: 12px 0; font-size: 15px; font-weight: bold; text-align: left; }
 .price-display { font-size: 36px; font-weight: 900; color: #ff5722; margin: 15px 0; }
 
-/* 微信收款码大图展示，强制允许长按识别 */
+/* 收款码展示 */
 .pay-qr-img {
   width: 220px;
   height: 220px;
@@ -61,8 +61,6 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
   border: 1px solid #eee;
   margin: 15px auto;
   display: block;
-  pointer-events: auto !important;
-  -webkit-touch-callout: default !important;
 }
 </style>
 </head>
@@ -98,7 +96,7 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
   <div id="order-list" class="muted">加载中...</div>
 </div>
 
-<!-- 4. 好友点开链接后的代付支付视图（无跳转报错，直接长按识别你的微信收款码） -->
+<!-- 4. 好友点开链接后的代付支付视图 -->
 <div id="view-mt-pay" class="tab-view">
   <div class="pay-page-container">
     <div style="font-size: 14px; color: #888; border-bottom: 1px solid #eee; padding-bottom: 8px; text-align: left;">🟡 美团外卖 | 交易保障护航</div>
@@ -115,12 +113,13 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
     <div style="font-size: 13px; color: #666;">需付款金额</div>
     <div class="price-display">¥<span id="mt-order-total">0.00</span></div>
 
-    <div style="background: #fdfdfd; border: 1px solid #ffeeba; background: #fff9e6; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px; color: #856404; text-align: center; font-weight: bold;">
-      👇 请【长按下方二维码】直接识别微信付款
+    <!-- 引导保存图片扫码，避开微信直接长按拦截 -->
+    <div style="background: #fff9e6; border: 1px solid #ffe08a; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px; color: #856404; text-align: center; font-weight: bold;">
+      👇 请【长按图片保存】或截图，打开微信【扫一扫】相册付款
     </div>
 
-    <!-- 核心：直接展示你的微信收款码图片（IMG_1872.jpeg），允许长按识别，永不报错 -->
-    <img class="pay-qr-img" src="IMG_1872.jpeg" alt="微信收款码" onerror="this.src='https://i.ibb.co/3s23w27g/image.png'" />
+    <!-- 收款码图片 -->
+    <img class="pay-qr-img" src="IMG_1872.jpeg" alt="微信收款码" />
 
     <p style="font-size: 12px; color: #888; margin-top: 10px;">付款完成后请通知好友确认收单~</p>
   </div>
