@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- 社交软件分享预览：标题与描述 -->
 <meta property="og:title" content="来帮我代付吧 ~ 😋" />
 <meta property="og:description" content="Hi, 你和我的距离只差一顿外卖，快来帮我买单吧！" />
 <title>美团外卖 - 交易保障</title>
@@ -45,34 +46,24 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 .badge{padding:4px 8px;border-radius:6px;font-size:12px;font-weight:bold;}
 .badge.wait{background:#fff3bf;color:#8a5b00;}
 
-/* 卡通美团代付卡片专用样式 */
+/* 美团卡通风格卡片与预览样式 */
 .cartoon-share-box { background: #1c1c1e; border-radius: 20px; overflow: hidden; color: #fff; box-shadow: 0 12px 32px rgba(0,0,0,0.2); max-width: 450px; margin: 20px auto; }
 .cartoon-header { padding: 14px 18px; font-size: 13px; color: #b0b0b0; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); background: #151517; }
 .cartoon-body { background: #fff; color: #111; padding: 24px 20px; text-align: center; }
-.cartoon-hero { display: flex; align-items: center; justify-content: space-between; background: #fff9e6; border-radius: 14px; padding: 15px; margin-bottom: 15px; border: 1px solid #ffeeba; }
-.cartoon-text { text-align: left; }
-.cartoon-title { font-size: 20px; font-weight: 900; color: #333; margin-bottom: 4px; }
+
+/* 完美复刻你截图中的卡片预览框 */
+.preview-card-img-wrap { width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid #eee; margin-bottom: 15px; background: #fff; }
+.preview-card-img-wrap img { width: 100%; display: block; }
+
 .cartoon-timer-box { background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 14px; margin: 15px 0; }
 .cartoon-timer-label { font-size: 12px; color: #888; margin-bottom: 4px; }
 .cartoon-timer-value { font-size: 28px; font-weight: 900; color: #e64a19; letter-spacing: 2px; }
-.qr-display-box { display: none; margin-top: 15px; padding: 15px; background: #fdfdfd; border: 1px solid #eee; border-radius: 12px; }
-
-/* 关键修复：允许手机浏览器长按图片调出系统菜单 */
-.qr-display-box img { 
-  width: 210px; 
-  height: 210px; 
-  object-fit: contain; 
-  border-radius: 8px; 
-  margin: 10px auto; 
-  display: block; 
-  pointer-events: auto !important; 
-  -webkit-touch-callout: default !important; 
-}
+.pay-options { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
 </style>
 </head>
 <body>
 
-<!-- 导航栏 -->
+<!-- 主导航栏 -->
 <div class="nav" id="main-nav">
   <div class="nav-item active" data-tab="view-stores">🏪 商家</div>
   <div class="nav-item" data-tab="view-cart">🛒 购物车</div>
@@ -82,9 +73,7 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 
 <!-- 1. 商家列表视图 -->
 <div id="view-stores" class="tab-view active">
-  <div id="stores-header">
-    <h2>商家列表</h2>
-  </div>
+  <div id="stores-header"><h2>商家列表</h2></div>
   <div id="store-list" class="muted">加载中...</div>
 </div>
 
@@ -98,13 +87,13 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
   <div id="cart-list" class="muted">购物车为空</div>
 </div>
 
-<!-- 3. 我的订单与分享视图 -->
+<!-- 3. 我的订单视图 -->
 <div id="view-orders" class="tab-view">
   <h2>我的订单</h2>
   <div id="order-list" class="muted">加载中...</div>
 </div>
 
-<!-- 4. 美团卡通代付好友点击进入的专用视图 -->
+<!-- 4. 好友点开链接看到的：美团卡通代付 & 支付视图 -->
 <div id="view-mt-pay" class="tab-view">
   <div class="cartoon-share-box">
     <div class="cartoon-header">
@@ -113,11 +102,9 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
     <div class="cartoon-body">
       <div style="font-size: 14px; color: #666; margin-bottom: 12px; text-align: left;">Hi, 你和我的距离只差一顿外卖~</div>
       
-      <div class="cartoon-hero">
-        <div class="cartoon-text">
-          <div class="cartoon-title">来帮我代付吧 ~</div>
-动动发财小手，感谢老板慷慨解囊！</div>
-        <div class="cartoon-avatar" style="font-size: 36px; background: #ffd000; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">🛵</div>
+      <!-- 这里完美放置你要求的卡通图片缩略图 (IMG_1872.jpeg) -->
+      <div class="preview-card-img-wrap">
+        <img src="IMG_1872.jpeg" alt="美团代付卡通卡片" onerror="this.src='https://i.ibb.co/3s23w27g/image.png'" />
       </div>
 
       <div class="cartoon-timer-box">
@@ -131,14 +118,9 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
       <div style="font-size: 14px; color: #888;">需付款金额</div>
       <div style="font-size: 36px; font-weight: 900; color: #ff5722; margin-bottom: 15px;">¥<span id="mt-order-total">0.00</span></div>
       
-      <!-- 触发展示微信收款码的按钮 -->
-      <button class="btn p" id="pay-btn" style="font-size:18px; border-radius:12px; padding: 16px;" onclick="showWeChatQRCode()">✨ 为好友买单 (显示付款码)</button>
-      
-      <!-- 微信收款码容器 -->
-      <div id="qr-display-area" class="qr-display-box">
-        <p style="font-size:14px; font-weight:bold; color:#333; margin:0 0 5px 0;">请将手机屏幕截图，或直接【长按下方二维码】识别付款：</p>
-        <img id="wechat-qr-img" src="" alt="微信收款码" />
-        <p style="font-size:12px; color:#e64a19; margin:5px 0 0 0; font-weight:bold;">💡 提示：若微信提示无法识别，请截屏后用微信扫一扫相册打开</p>
+      <!-- 支付双保险按钮：直接跳转官方微信支付链接，或长按识别/前往支付 -->
+      <div class="pay-options">
+        <button class="btn p" style="font-size:18px; border-radius:12px; padding: 16px;" onclick="goToWeChatPay()">✨ 确认并前往微信支付买单</button>
       </div>
     </div>
   </div>
@@ -166,8 +148,8 @@ input:focus,select:focus{border-color:#ffcf33;box-shadow:0 0 0 4px rgba(255,208,
 </div>
 
 <script>
-// 微信收款码图片地址（已转为稳定线上直链）
-const WECHAT_QR_CODE_URL = 'https://i.ibb.co/3s23w27g/image.png';
+// 你提供的官方微信支付链接
+const WECHAT_PAY_URL = 'https://payapp.wechatpay.cn/sjt/qr/AQFnMljnPzZWMgkyr_fDaWLI';
 
 let cart = {}; 
 
@@ -319,7 +301,7 @@ async function shareOrder(content, total) {
     try { await navigator.share(shareData); } catch (e) {}
   } else {
     navigator.clipboard.writeText(shareUrl);
-    alert("卡片链接已复制，快发给好友吧！");
+    alert("代付卡片链接已复制，快发给好友吧！");
   }
 }
 
@@ -378,14 +360,9 @@ function initRouter() {
   }
 }
 
-function showWeChatQRCode() {
-  const qrArea = document.getElementById('qr-display-area');
-  const qrImg = document.getElementById('wechat-qr-img');
-  const btn = document.getElementById('pay-btn');
-  
-  qrImg.src = WECHAT_QR_CODE_URL;
-  qrArea.style.display = 'block';
-  btn.style.display = 'none';
+function goToWeChatPay() {
+  // 直接跳转到你提供的微信支付链接
+  window.location.href = WECHAT_PAY_URL;
 }
 
 window.onload = () => {
