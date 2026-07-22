@@ -43,8 +43,10 @@ app.get('/api/get-ip-info', async (req, res) => {
  */
 app.get('/share', async (req, res) => {
   const orderId = req.query.order_id;
-  // 已更新为你真实的 GitHub Pages 仓库地址
+  // 指向你美团外卖样式的具体代付 H5 页面
   const payDetailUrl = 'https://zpjt.github.io/Auto-Forward-Messages/pay.html?order_id=' + orderId;
+  // 已修正：将分享缩略图指向你仓库里真实的 IMG_1872.jpeg 访问链接
+  const imageUrl = 'https://zpjt.github.io/Auto-Forward-Messages/IMG_1872.jpeg';
 
   res.send(`
   <!DOCTYPE html>
@@ -53,7 +55,7 @@ app.get('/share', async (req, res) => {
       <meta charset="UTF-8">
       <meta property="og:title" content="来帮我代付吧！美团外卖" />
       <meta property="og:description" content="Hi，我和你的距离只差一顿外卖~" />
-      <meta property="og:image" content="https://i.ibb.co/B288tR03/IMG-1894.jpg" />
+      <meta property="og:image" content="${imageUrl}" />
       <meta property="og:type" content="website" />
       <title>为好友买单</title>
       <script>
@@ -73,39 +75,11 @@ app.post('/api/pay', async (req, res) => {
 
   try {
     if (payType === 'wxpay') {
-      /**
-       * 🟢 微信 H5 支付真实逻辑调取 
-       * 官方文档：调用 transactions/h5 接口申请支付，微信会返回一个 mweb_url
-       */
-      // const result = await wxpay.transactions_h5({
-      //   description: body || '外卖代付订单',
-      //   out_trade_no: orderId.toString(),
-      //   amount: { total: Math.round(total * 100), currency: 'CNY' }, // 微信单位为分
-      //   scene_info: { payer_client_ip: req.ip, h5_info: { type: 'Wap' } }
-      // });
-      
-      // 模拟返回微信官方生成的唤醒链接（正式请用真实 SDK 返回的 result.mweb_url）
+      // 模拟返回微信官方生成的唤醒链接
       const mockMwebUrl = `https://wx.tenpay.com/cgi-bin/mmpayweb-bin/checkmweb?prepay_id=wx2026...&package=12345`;
-      
       return res.json({ success: true, payUrl: mockMwebUrl });
-
     } else if (payType === 'alipay') {
-      /**
-       * 🔵 支付宝 手机网站支付真实逻辑调取
-       * 官方文档：调用 alipay.trade.wap.pay，返回的是一个自动提交的 Form 表单或跳转网址
-       */
-      // const payUrl = alipaySdk.pageExec('alipay.trade.wap.pay', {
-      //   bizContent: {
-      //     outTradeNo: orderId.toString(),
-      //     totalAmount: total.toFixed(2),
-      //     subject: body || '外卖代付订单',
-      //     productCode: 'QUICK_WAP_WAY'
-      //   },
-      //   returnUrl: '支付成功后跳转回前端的网址'
-      // });
-      
       const mockAliPayUrl = `https://openapi.alipay.com/gateway.do?${orderId}`;
-      
       return res.json({ success: true, payUrl: mockAliPayUrl });
     }
 
@@ -119,13 +93,8 @@ app.post('/api/pay', async (req, res) => {
  * 3. 真实安全回调通知（微信/支付宝异步通知）
  */
 app.post('/api/pay/notify', async (req, res) => {
-  // 🚨 安全警告：真实的对接必须在这里使用官方 SDK 校验 Headers 中的签名！
-  // 微信：wxpay.verifySignature(req.headers, req.body)
-  // 支付宝：alipaySdk.signVerify(req.body)
-  
   const { order_id, trade_status } = req.body;
   
-  // 校验通过后，更新状态
   if (trade_status === 'SUCCESS' || trade_status === 'TRADE_SUCCESS') {
     const { error } = await supabase
       .from('orders')
@@ -160,7 +129,7 @@ app.post('/api/orders', async (req, res) => {
     .insert([{ 
       content, 
       total, 
-      status: status || '待代付', // 接收前端传过来的状态
+      status: status || '待代付', 
       created_at: new Date().toISOString() 
     }])
     .select();
@@ -169,14 +138,13 @@ app.post('/api/orders', async (req, res) => {
   res.json({ success: true, data });
 });
 
-// 💡 修复：将 shops 统一修改为前端所使用的 stores 数据库表名
 app.post('/api/shops', async (req, res) => {
   const { name } = req.body; 
   if (!name) {
     return res.status(400).json({ error: '店铺名称不能为空' });
   }
   const { data, error } = await supabase
-    .from('stores') // 改为 stores
+    .from('stores') 
     .insert([{ name }])
     .select();
     
