@@ -19,12 +19,32 @@ const supabase = createClient(
 );
 
 /**
+ * 0. 新增：获取访客 IP 归属地接口（通过后端调用 ipinfo，保护 Token 安全）
+ */
+app.get('/api/get-ip-info', async (req, res) => {
+  // 获取客户端真实 IP（兼容代理和直连）
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const token = '1d1487ce186937';
+
+  try {
+    // 请求 ipinfo Lite 接口
+    const response = await fetch(`https://api.ipinfo.io/lite/${clientIp}?token=${token}`);
+    const data = await response.json();
+    
+    // 将结果返回给前端
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
  * 1. 微信/QQ卡片分享跳转中转站
  */
 app.get('/share', async (req, res) => {
   const orderId = req.query.order_id;
-  // 指向你美团外卖样式的具体代付 H5 页面
-  const payDetailUrl = 'https://lsscqc520-ship-it.github.io/Auto-Forward-Messages/pay.html?order_id=' + orderId;
+  // 已更新为你真实的 GitHub Pages 仓库地址
+  const payDetailUrl = 'https://zpjt.github.io/Auto-Forward-Messages/pay.html?order_id=' + orderId;
 
   res.send(`
   <!DOCTYPE html>
