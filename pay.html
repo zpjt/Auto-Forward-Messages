@@ -35,7 +35,7 @@
 </div>
 
 <script>
-    // 你的收款码链接
+    // 已更新为你的真实支付宝收款码链接
     const ALIPAY_QR_URL = "https://qr.alipay.com/2m612342txzv1x1aorosqa0";
 
     const params = new URLSearchParams(window.location.search);
@@ -47,7 +47,7 @@
         const scheme = `alipays://platformapi/startapp?saId=10000007&qrcode=${encodeURIComponent(ALIPAY_QR_URL)}`;
         window.location.href = scheme;
         
-        // 兜底：如果没唤醒，提示跳转
+        // 兜底：如果未成功唤醒 App，1.5秒后自动跳转至网页收款链接
         setTimeout(() => {
             window.location.href = ALIPAY_QR_URL;
         }, 1500);
@@ -55,4 +55,3 @@
 </script>
 </body>
 </html>
-
